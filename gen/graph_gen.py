@@ -2,8 +2,8 @@
 """Pyrgg graph generators module."""
 import random
 import datetime
-from pyrgg.params import *
-from pyrgg.functions import *
+from params import *
+from functions import *
 
 # random_system=random.SystemRandom()
 random_system = random
@@ -174,6 +174,82 @@ def json_maker(
     return edge_number
 
 
+def dfg_json_maker(
+        file_name,
+        min_weight,
+        max_weight,
+        vertices,
+        min_edge,
+        max_edge,
+        sign,
+        direct,
+        self_loop,
+        multigraph):
+    """
+    Create output file in json format.
+
+    :param file_name: file name
+    :type file_name: str
+    :param min_weight: weight min range
+    :type min_weight: int
+    :param max_weight: weight max range
+    :type max_weight: int
+    :param vertices: number of vertices
+    :type vertices: int
+    :param min_edge : minimum edge number
+    :type min_edge : int
+    :param max_edge : maximum edge number
+    :type max_edge : int
+    :param sign: weight sign flag
+    :type sign: int
+    :param direct: directed and undirected graph flag
+    :type direct: int
+    :param self_loop: self loop flag
+    :type self_loop: int
+    :param multigraph: multigraph flag
+    :type multigraph: int
+    :return: edge_number as int
+    """
+    edge_dic, weight_dic, edge_number = dfg_edge_gen(
+        vertices,
+        min_weight,
+        max_weight,
+        min_edge,
+        max_edge,
+        sign,
+        direct,
+        self_loop,
+        multigraph,
+    )
+    print(edge_dic)
+
+    with open(file_name + ".json", "w") as buf:
+        _dfg_write_to_json(
+            buf,
+            edge_dic,
+            weight_dic,
+        )
+    return edge_number
+
+
+def _dfg_write_to_json(buf, edge_dic, weight_dic):
+    """Write data to json buffer.
+
+    :param buf: output file object
+    :type buf: file_object
+    :param edge_dic: dictionary containing edges data
+    :type edge_dic: dict
+    :param weight_dic: dictionary containing weights data
+    :type weight_dic: dict
+    :return: None
+    """
+    buf.write('{\n\t"graph": {\n')
+    _write_nodes_to_json(buf, edge_dic)
+    buf.write("\n\t\t],\n")
+    _dfg_write_edges_to_json(buf, edge_dic)
+    buf.write("\n\t\t]\n\t}\n}")
+
+
 def _write_to_json(buf, edge_dic, weight_dic):
     """Write data to json buffer.
 
@@ -261,6 +337,43 @@ def _write_edges_to_json(buf, edge_dic, weight_dic):
                 '"\n\t\t\t}'
             ])
             buf.write(edges)
+
+
+def _dfg_write_edges_to_json(buf, edge_dic):
+    """Write edges to json.
+
+    :param buf: output file object
+    :type buf: file_object
+    :param edge_dic: dictionary containing edges data
+    :type edge_dic: dict
+    :return: None
+    """
+    edges = '\t\t\t"edges":[\n'
+
+    first_line = True
+    buf.write(edges)
+
+    for key, edge_val in edge_dic.items():
+        for j, value in enumerate(edge_val):
+            edges = ""
+            if first_line:
+                first_line = False
+            else:
+                edges += ",\n"
+            edges = "".join([
+                edges,
+                '\t\t\t{\n\t\t\t\t"source": ',
+                '"',
+                str(key),
+                '",\n\t\t\t\t',
+                '"target": ',
+                '"',
+                str(value),
+                '"\n\t\t\t}'
+            ])
+            buf.write(edges)
+
+
 
 
 def csv_maker(

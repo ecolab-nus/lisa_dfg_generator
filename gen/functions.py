@@ -8,7 +8,7 @@ import random
 import textwrap
 import yaml
 
-from pyrgg.params import (
+from params import (
     MENU_ITEMS1,
     MENU_ITEMS2,
     PYRGG_LINKS,
@@ -458,6 +458,145 @@ def branch_gen(
             reference_vertices.pop(random_tail_index)
     return [branch_list, weight_list]
 
+def dfg_branch_gen(
+        vertex_index,
+        max_edge,
+        random_edge,
+        min_weight,
+        max_weight,
+        sign,
+        direct,
+        self_loop,
+        multigraph,
+        used_vertices,
+        degree_dict,
+        degree_sort_dict):
+    """
+    Generate branch and weight vector of each vertex.
+
+    :param vertex_index: origin vertex index
+    :type vertex_index: int
+    :param max_edge : maximum edge number
+    :type max_edge : int
+    :param random_edge: number of vertex edges
+    :type random_edge: int
+    :param min_weight: weight min range
+    :type min_weight: int
+    :param max_weight: weight max range
+    :type max_weight: int
+    :param sign: weight sign flag
+    :type sign: int
+    :param direct: directed and undirected graph flag
+    :type direct: int
+    :param self_loop: self loop flag
+    :type self_loop: int
+    :param multigraph: multigraph flag
+    :type multigraph: int
+    :param used_vertices: used vertices dictionary
+    :type used_vertices: dict
+    :param degree_dict: all vertices degree
+    :type degree_dict: dict
+    :param degree_sort_dict: degree to vertices list
+    :type degree_sort_dict: dict
+    :return: branch and weight list
+    """
+    index = 0
+    branch_list = []
+    weight_list = []
+    reference_vertices = []
+    max_weight_flag = is_float(max_weight)
+    min_weight_flag = is_float(min_weight)
+    weight_float_flag = min_weight_flag or max_weight_flag
+    random_unit = random_system.randint
+    vertex_degree = degree_dict[vertex_index]
+    threshold = _threshold_calc(
+        random_edge=random_edge,
+        max_edge=max_edge,
+        vertex_degree=vertex_degree)
+    for i in range(max_edge + 1):
+        reference_vertices.extend(list(degree_sort_dict[i].values()))
+        if len(reference_vertices) >= threshold:
+            break
+    weight_precision = max(
+        get_precision(max_weight),
+        get_precision(min_weight))
+    if weight_float_flag:
+        random_unit = random_system.uniform
+    if direct == 2 and (
+            vertex_index in used_vertices.keys()) and multigraph == 1:
+        reference_vertices = list(
+            set(reference_vertices) - set(used_vertices[vertex_index]))
+    if self_loop == 2 and vertex_index in reference_vertices:
+        reference_vertices.remove(vertex_index)
+    reference_vertices.sort()
+    while (index < threshold):
+        vertex_degree = degree_dict[vertex_index]
+        if vertex_degree >= max_edge:
+            break
+        if len(reference_vertices) == 0:
+            break
+        random_tail_index = random_system.choice(
+            range(len(reference_vertices)))
+        random_tail = reference_vertices[random_tail_index]
+        random_tail_degree = degree_dict[random_tail]
+
+        if vertex_index < 0  and index == 0:
+            # this is for weak connected DFG
+            find_vertex = False
+
+            for x in range(0, vertex_index):
+                if vertex_index in set(used_vertices[x]):
+                    find_vertex = True
+                    break
+            max_tried = 0
+            while not find_vertex:
+                max_tried += 1
+                if max_tried > vertex_index:
+                    assert False
+                tail = random_system.choice(
+                    range(vertex_index))
+                tail_index = reference_vertices.index(tail)
+                tail_degree = degree_dict[tail]
+
+                if tail_degree < max_edge:
+                    random_tail_index = tail_index
+                    random_tail_degree = tail_degree
+                    random_tail = tail
+                    find_vertex = True
+
+        if random_tail_degree >= max_edge or (
+                random_tail == vertex_index and random_tail_degree >= (
+                max_edge - 1)):
+            reference_vertices.pop(random_tail_index)
+            continue
+        if direct == 2:
+            if random_tail in used_vertices.keys():
+                used_vertices[random_tail].append(vertex_index)
+            else:
+                used_vertices[random_tail] = [vertex_index]
+        if sign == 2:
+            random_weight = random_unit(min_weight, max_weight)
+        else:
+            random_weight = sign_gen() * random_unit(min_weight, max_weight)
+        if weight_float_flag:
+            random_weight = round(random_weight, weight_precision)
+        branch_list.append(random_tail)
+        weight_list.append(random_weight)
+        index += 1
+        del degree_sort_dict[vertex_degree][vertex_index]
+        if random_tail != vertex_index:
+            del degree_sort_dict[random_tail_degree][random_tail]
+        degree_dict[random_tail] += 1
+        degree_dict[vertex_index] += 1
+        degree_sort_dict[degree_dict[vertex_index]
+        ][vertex_index] = vertex_index
+        if random_tail != vertex_index:
+            degree_sort_dict[degree_dict[random_tail]
+            ][random_tail] = random_tail
+        if multigraph == 1:
+            reference_vertices.pop(random_tail_index)
+    return [branch_list, weight_list]
+
 
 def edge_gen(
         vertices_number,
@@ -524,6 +663,83 @@ def edge_gen(
         temp = temp + len(temp_list[0])
     return [dict(zip(vertices_id, vertices_edge)),
             dict(zip(vertices_id, weight_list)), temp]
+
+
+def dfg_edge_gen(
+        vertices_number,
+        min_weight,
+        max_weight,
+        min_edge,
+        max_edge,
+        sign,
+        direct,
+        self_loop,
+        multigraph):
+    """
+    Generate each vertex connection number.
+
+    :param vertices_number: number of vertices
+    :type vertices_number: int
+    :param min_weight: weight min range
+    :type min_weight: int
+    :param max_weight: weight max range
+    :type max_weight: int
+    :param min_edge : minimum edge number
+    :type min_edge : int
+    :param max_edge : maximum edge number
+    :type max_edge : int
+    :param sign: weight sign flag
+    :type sign: int
+    :param direct: directed and undirected graph flag
+    :type direct: int
+    :param self_loop: self loop flag
+    :type self_loop: int
+    :param multigraph: multigraph flag
+    :type multigraph: int
+    :return: list of dicts
+    """
+
+    # For each node you need at least one edge.
+    #
+    # Start with one node. In each iteration, create a new node and a new edge. The edge is to connect the new node with a random node from the previous node set.
+    #
+    # After all nodes are created, create random edges until S is fulfilled. Make sure not to create double edges (for this you can use an adjacency matrix).
+    #
+    # Random graph is done in O(S).
+    temp = 0
+    vertices_id = list(range(1, vertices_number + 1))
+    vertices_edge = []
+    weight_list = []
+    used_vertices = {}
+    degree_dict = {i: 0 for i in vertices_id}
+    degree_sort_dict = {i: {} for i in range(max_edge + 1)}
+    degree_sort_dict[0] = {i: i for i in vertices_id}
+    random_edge = min_edge
+    for i in vertices_id:
+        status, lower_limit, upper_limit = random_edge_limits(
+            i, min_edge, max_edge, degree_dict)
+        if status:
+            random_edge = random_system.randint(lower_limit, upper_limit)
+        temp_list = dfg_branch_gen(
+            i,
+            max_edge,
+            random_edge,
+            min_weight,
+            max_weight,
+            sign,
+            direct,
+            self_loop,
+            multigraph,
+            used_vertices,
+            degree_dict,
+            degree_sort_dict)
+        vertices_edge.append(temp_list[0])
+        weight_list.append(temp_list[1])
+        temp = temp + len(temp_list[0])
+    return [dict(zip(vertices_id, vertices_edge)),
+            dict(zip(vertices_id, weight_list)), temp]
+
+
 
 
 def json_to_yaml(filename):
