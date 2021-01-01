@@ -221,7 +221,7 @@ def dfg_json_maker(
         self_loop,
         multigraph,
     )
-    print(edge_dic)
+
 
     with open(file_name + ".json", "w") as buf:
         _dfg_write_to_json(
@@ -229,7 +229,7 @@ def dfg_json_maker(
             edge_dic,
             weight_dic,
         )
-    return edge_number
+    return edge_dic
 
 
 def _dfg_write_to_json(buf, edge_dic, weight_dic):
