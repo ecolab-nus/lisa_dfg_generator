@@ -5,12 +5,15 @@ sys.path.append('../graph_generation')
 from graph_gen import *
 from graph import Graph, Vertex
 
-GRAPH_NUMERS = 10
-MIN_NODE = 10
-MAX_NODE = 12
+
+MIN_NODE = 15
+MAX_NODE = 100
+
 print("start")
 number_node = random.choice(range(MIN_NODE, MAX_NODE))
-edge_dic = dfg_json_maker(str(1), 0, 0, number_node, 5, 6, 0, 1, 2, 1)
+min_edge = 2 # for each node
+max_edge = random.choice(range(3, 5)) # for each node
+edge_dic = dfg_json_maker(str(1), 0, 0, number_node, min_edge, max_edge, 0, 1, 2, 1)
 print(edge_dic)
 
 graph = Graph()
@@ -24,6 +27,7 @@ for key,values in edge_dic.items():
         graph.add_edge(key, value)
 
 graph.check_connectivity()
-graph.detect_cycle()
+graph.handle_cycle()
 
-graph.ASAP()
+asap_value = graph.ASAP()
+graph.generate_simple_labels(asap_value, 2)

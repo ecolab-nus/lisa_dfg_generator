@@ -72,7 +72,7 @@ class Graph:
             if len(self.pred[node]) == 0 and len(self.succ[node]) == 0:
                 Exception("this graph is not weak connected")
 
-    def detect_cycle(self):
+    def handle_cycle(self):
 
         visited = set()
         cycle_edges = set()
@@ -110,8 +110,6 @@ class Graph:
 
 
 
-
-
     def ASAP(self):
         # check Predecessor
         asap_value = {}
@@ -124,8 +122,8 @@ class Graph:
         for edge in self.edges:
             temp_pred[edge[1]].add(edge[0])
 
-        print(self.edges)
-        print(temp_pred)
+        print("edges:", self.edges)
+        print("edge precedence:", temp_pred)
 
         temp = set()
         for node in non_scheduled:
@@ -159,9 +157,26 @@ class Graph:
             if tried == 1000:
                 Exception("this should not happen")
 
+        print("ASAP value: ",asap_value)
+        return asap_value
+
+    def generate_simple_labels(self, asap_value, indegree_threashold):
+        # if the in-degree > indegree_threashold, the label =  asap_value - 1. 
+        # Label value must >= 0
+        nodeL_labels = {}
+        for (node, avalue) in asap_value.items():
+            value = avalue
+            in_degree = len(self.pred[node])
+            if in_degree > 2 * indegree_threashold:
+                value -= 2
+            elif in_degree > indegree_threashold:
+                value -= 1
+            if value < 0:
+                value = 0
+            nodeL_labels[node] = value
+        print("node labels:", nodeL_labels)
 
 
-        print(asap_value)
-        print("ASAP")
+
 
 
