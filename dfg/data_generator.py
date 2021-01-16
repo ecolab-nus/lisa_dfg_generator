@@ -36,6 +36,9 @@ for i in tqdm(range(10000)):
 
     graph.check_connectivity()
     graph.handle_cycle()
+    if not graph.check_connectivity():
+        # skip this picture
+        continue
 
     try:
         signal.signal(signal.SIGALRM, myHandler)
@@ -46,6 +49,7 @@ for i in tqdm(range(10000)):
         signal.alarm(0)
     except Exception as ret:
         print("msg:", ret)
+        asap_value = graph.ASAP()
         with open(os.path.join("graph", "error.txt"), "w") as f:
             for edge in graph.edges:
                 start_node, end_node = edge

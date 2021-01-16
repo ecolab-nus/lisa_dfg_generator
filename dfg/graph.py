@@ -70,43 +70,52 @@ class Graph:
     def check_connectivity(self):
         for node in self.vertices.keys():
             if len(self.pred[node]) == 0 and len(self.succ[node]) == 0:
-                Exception("this graph is not weak connected")
+                return False
 
     def handle_cycle(self):
 
-        visited = set()
-        cycle_edges = set()
-        start_node = set()
+        self.backtrack_edges.clear()
 
-        for node in self.vertices.keys():
-            if len(self.pred[node]) == 0:
-                start_node.add(node)
+        while True:
+            cycle_edges = set()
+            visited = set()
+            start_node = set()
+            for node in self.vertices.keys():
+                if len(self.pred[node]) == 0:
+                    start_node.add(node)
+            if len(start_node) == 0:
+                # print("no start node, add one")
+                start_node.add(1)
+            # print("start_node", start_node)
 
-        if len(start_node) == 0:
-            # print("no start node, add one")
-            start_node.add(1)
-        # print("start_node", start_node)
-        for node in start_node:
-            trace_stack = set()
-            self.DFS_cycle_util(node, visited, trace_stack , cycle_edges)
+            for node in start_node:
+                trace_stack = set()
+                self.DFS_cycle_util(node, visited, trace_stack , cycle_edges)
 
-        # print("cycle edge", cycle_edges)
+            # print("cycle edge", cycle_edges)
 
-        # remove cycle_edge
-        self.backtrack_edges =  cycle_edges.copy()
-        temp_edges= self.edges.copy()
-        self.edges.clear()
-        for edge in temp_edges:
-            start = edge[0]
-            end = edge[1]
-            is_backtrack_edge = False
-            for b_edge in cycle_edges:
-                if b_edge[0]== start and b_edge[1]== end:
-                    is_backtrack_edge = True
-                    break
-            if not is_backtrack_edge:
-                self.edges.add(edge)
-        assert len(self.edges) + len(self.backtrack_edges) == len(temp_edges)
+            num_old_back_edge = len(self.backtrack_edges)
+            for edge in cycle_edges:
+                self.backtrack_edges.add((edge[0],edge[1]))
+            temp_edges= self.edges.copy()
+            self.edges.clear()
+
+            # remove cycle_edge
+            for edge in temp_edges:
+                start = edge[0]
+                end = edge[1]
+                is_backtrack_edge = False
+                for b_edge in cycle_edges:
+                    if b_edge[0]== start and b_edge[1]== end:
+                        is_backtrack_edge = True
+                        break
+                if not is_backtrack_edge:
+                    self.edges.add(edge)
+            assert len(self.edges) + len(self.backtrack_edges) == len(temp_edges) + num_old_back_edge
+
+            if len(self.backtrack_edges) == num_old_back_edge:
+
+                break
 
 
 
