@@ -58,6 +58,7 @@ for i in tqdm(range(10000)):
 
     labels = graph.generate_simple_labels(asap_value, 2)
 
+    assert (len(graph.vertices)!= 0)
     # save graph info
     # ！！！！因为torch geometric中的图是从0开始计算节点的，所以都-1了
     with open(os.path.join("graph", str(i)+".txt"), "w") as f:
