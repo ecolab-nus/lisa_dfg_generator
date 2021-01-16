@@ -6,6 +6,11 @@ sys.path.append('../graph_generation')
 from graph_gen import *
 from graph import Graph, Vertex
 from tqdm import tqdm
+import time
+import signal
+
+def myHandler(signum, frame):
+    raise Exception("TimeoutError")
 
 MIN_NODE = 15
 MAX_NODE = 100
@@ -16,8 +21,6 @@ if not os.path.exists("label"):
     os.mkdir("label")
 
 for i in tqdm(range(10000)):
-    if(i%200 == 0):
-        print(i)
     number_node = random.choice(range(MIN_NODE, MAX_NODE))
     min_edge = 2 # for each node
     max_edge = random.choice(range(3, 5)) # for each node
@@ -34,15 +37,29 @@ for i in tqdm(range(10000)):
     graph.check_connectivity()
     graph.handle_cycle()
 
+    try:
+        signal.signal(signal.SIGALRM, myHandler)
+        signal.alarm(10)
+
+        asap_value = graph.ASAP()
+
+        signal.alarm(0)
+    except Exception as ret:
+        print("msg:", ret)
+        with open(os.path.join("graph", "error.txt"), "w") as f:
+            for edge in graph.edges:
+                start_node, end_node = edge
+                f.write(str(start_node - 1) + '\t' + str(end_node - 1) + '\n')
+
+    labels = graph.generate_simple_labels(asap_value, 2)
+
+
     # save graph info
     # ！！！！因为torch geometric中的图是从0开始计算节点的，所以都-1了
     with open(os.path.join("graph", str(i)+".txt"), "w") as f:
         for edge in graph.edges:
             start_node, end_node = edge
             f.write(str(start_node-1)+'\t'+str(end_node-1)+'\n')
-
-    asap_value = graph.ASAP()
-    labels = graph.generate_simple_labels(asap_value, 2)
 
     # save tag info
     with open(os.path.join("label", str(i)+".txt"), "w") as f:
