@@ -55,7 +55,7 @@ class Graph:
         # and print it
         visited.add(v)
         trace_stack.add(v)
-        print(v, end=' ')
+        # print(v, end=' ')
 
         # Recur for all the vertices
         # adjacent to this vertex
@@ -83,14 +83,14 @@ class Graph:
                 start_node.add(node)
 
         if len(start_node) == 0:
-            print("no start node, add one")
+            # print("no start node, add one")
             start_node.add(1)
-        print("start_node", start_node)
+        # print("start_node", start_node)
         for node in start_node:
             trace_stack = set()
             self.DFS_cycle_util(node, visited, trace_stack , cycle_edges)
 
-        print("cycle edge", cycle_edges)
+        # print("cycle edge", cycle_edges)
 
         # remove cycle_edge
         self.backtrack_edges =  cycle_edges.copy()
@@ -122,8 +122,8 @@ class Graph:
         for edge in self.edges:
             temp_pred[edge[1]].add(edge[0])
 
-        print("edges:", self.edges)
-        print("edge precedence:", temp_pred)
+        # print("edges:", self.edges)
+        # print("edge precedence:", temp_pred)
 
         temp = set()
         for node in non_scheduled:
@@ -157,7 +157,7 @@ class Graph:
             if tried == 1000:
                 Exception("this should not happen")
 
-        print("ASAP value: ",asap_value)
+        # print("ASAP value: ",asap_value)
         return asap_value
 
     def generate_simple_labels(self, asap_value, indegree_threashold):
@@ -174,7 +174,8 @@ class Graph:
             if value < 0:
                 value = 0
             nodeL_labels[node] = value
-        print("node labels:", nodeL_labels)
+        # print("node labels:", nodeL_labels)
+        return nodeL_labels
 
 
 
