@@ -37,8 +37,9 @@ for i in tqdm(range(10000)):
     graph.check_connectivity()
     graph.handle_cycle()
     if not graph.check_connectivity():
-        # skip this picture
+        print("did not generate", i)
         continue
+
 
     try:
         signal.signal(signal.SIGALRM, myHandler)
@@ -49,14 +50,13 @@ for i in tqdm(range(10000)):
         signal.alarm(0)
     except Exception as ret:
         print("msg:", ret)
-        asap_value = graph.ASAP()
+        graph.ASAP()
         with open(os.path.join("graph", "error.txt"), "w") as f:
             for edge in graph.edges:
                 start_node, end_node = edge
                 f.write(str(start_node - 1) + '\t' + str(end_node - 1) + '\n')
 
     labels = graph.generate_simple_labels(asap_value, 2)
-
 
     # save graph info
     # ！！！！因为torch geometric中的图是从0开始计算节点的，所以都-1了

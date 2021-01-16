@@ -60,17 +60,30 @@ class Graph:
         # Recur for all the vertices
         # adjacent to this vertex
         for succ in self.succ[v]:
-            if succ not in visited:
-                new_stack = trace_stack.copy()
-                self.DFS_cycle_util(succ, visited, new_stack, cycle_edge)
-            elif succ in trace_stack:
+            if succ in trace_stack:
                 # get cycle edge
                 cycle_edge.add((v,succ))
+            else:
+                new_stack = trace_stack.copy()
+                self.DFS_cycle_util(succ, visited, new_stack, cycle_edge)
 
     def check_connectivity(self):
+        temp_vert = self.vertices.copy()
+        self.vertices.clear()
+        for node in temp_vert.keys():
+            # remove lonely node
+            if len(self.pred[node]) != 0 or len(self.succ[node]) != 0:
+                self.vertices[node] = temp_vert[node]
+
+
+        start_node = set()
         for node in self.vertices.keys():
-            if len(self.pred[node]) == 0 and len(self.succ[node]) == 0:
-                return False
+            if len(self.pred[node]) == 0:
+                start_node.add(node)
+        if len(start_node) == 0:
+            return False
+        else:
+            return True
 
     def handle_cycle(self):
 
@@ -83,9 +96,7 @@ class Graph:
             for node in self.vertices.keys():
                 if len(self.pred[node]) == 0:
                     start_node.add(node)
-            if len(start_node) == 0:
-                # print("no start node, add one")
-                start_node.add(1)
+
             # print("start_node", start_node)
 
             for node in start_node:
@@ -93,6 +104,16 @@ class Graph:
                 self.DFS_cycle_util(node, visited, trace_stack , cycle_edges)
 
             # print("cycle edge", cycle_edges)
+            # reconstruct the node list and pred  & succ dic
+            temp_vert = self.vertices.copy()
+            self.vertices.clear()
+            self.pred.clear()
+            self.succ.clear()
+            for node in temp_vert.keys():
+                if node in visited:
+                    self.vertices[node] = temp_vert[node]
+                    self.succ[node] = set()
+                    self.pred[node] = set()
 
             num_old_back_edge = len(self.backtrack_edges)
             for edge in cycle_edges:
@@ -110,12 +131,15 @@ class Graph:
                         is_backtrack_edge = True
                         break
                 if not is_backtrack_edge:
-                    self.edges.add(edge)
-            assert len(self.edges) + len(self.backtrack_edges) == len(temp_edges) + num_old_back_edge
+                    if edge[0] in visited and edge[1] in visited:
+                        self.edges.add(edge)
+                        self.pred[edge[1]].add(edge[0])
+                        self.succ[edge[0]].add(edge[1])
 
-            if len(self.backtrack_edges) == num_old_back_edge:
 
+            if len(cycle_edges) == 0:
                 break
+
 
 
 
@@ -124,12 +148,9 @@ class Graph:
         asap_value = {}
         non_scheduled = set()
 
-        temp_pred = {}
+        temp_pred = self.pred.copy()
         for node in self.vertices:
             non_scheduled.add(node)
-            temp_pred [node] = set()
-        for edge in self.edges:
-            temp_pred[edge[1]].add(edge[0])
 
         # print("edges:", self.edges)
         # print("edge precedence:", temp_pred)
@@ -160,11 +181,15 @@ class Graph:
                         if asap_value[p] > max_asap:
                             max_asap = asap_value[p]
                     asap_value[node] = max_asap + 1
-                    non_scheduled.discard(node)
+                    non_scheduled.remove(node)
                     break
             tried +=1
-            if tried == 1000:
-                Exception("this should not happen")
+            if tried == 10000:
+                print(non_scheduled)
+                print(self.edges)
+                print(self.pred)
+                Exception("should not happen")
+
 
         # print("ASAP value: ",asap_value)
         return asap_value
