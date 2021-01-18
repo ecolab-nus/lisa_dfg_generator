@@ -3,12 +3,6 @@ import torch
 from torch_geometric.data import Data
 import numpy as np
 
-# 由于是无向图，因此有 4 条边：(0 -> 1), (1 -> 0), (1 -> 2), (2 -> 1)
-edge_index = torch.tensor([[0, 1, 1, 2],
-                           [1, 0, 2, 1]], dtype=torch.long)
-# 节点的特征
-x = torch.tensor([[-1], [0], [1]], dtype=torch.float)
-
 def load_data(graph_dir, label_dir):
     dataset = []
     graph_files = os.listdir(graph_dir)
@@ -36,15 +30,11 @@ def load_data(graph_dir, label_dir):
         label = np.array(label)
         idex=np.lexsort([label[:,0]])
         sorted_label = label[idex, :]
-        print(sorted_label)
         x = torch.tensor(sorted_label[:,1], dtype=torch.float)
         f_label.close()
-        print("label")
-        print(x)
-        print("edge")
-        print(edge_index)
+        
         data = Data(x=x, edge_index=edge_index)
         dataset.append(data)
     return dataset
 
-load_data("graph", "label")
+# load_data("graph", "label")

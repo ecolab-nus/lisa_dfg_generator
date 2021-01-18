@@ -60,7 +60,7 @@ for i in tqdm(range(10000)):
 
     assert (len(graph.vertices)!= 0)
     # save graph info
-    # ！！！！因为torch geometric中的图是从0开始计算节点的，所以都-1了
+    # Because graph in torch geometric counts vertices from 0, all generated nodes id will -1.
     with open(os.path.join("graph", str(i)+".txt"), "w") as f:
         for edge in graph.edges:
             start_node, end_node = edge
