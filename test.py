@@ -9,7 +9,6 @@ dataset = dfg_dataset('data')
 class Net(torch.nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        GCNConv()
         self.conv1 = GCNConv(dataset.num_node_features, 16)
         self.conv2 = GCNConv(16, dataset.num_classes)
 

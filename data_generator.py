@@ -39,11 +39,18 @@ def generator(n_data, dir):
             for value in values:
                 graph.add_edge(key, value)
 
+        node_number = len(graph.vertices.keys())
         graph.check_connectivity()
         graph.handle_cycle()
         if not graph.check_connectivity():
             print("did not generate", i)
             continue
+
+        new_node_number = len(graph.vertices.keys())
+        if node_number != new_node_number:
+            #add somework to handle it
+            # print("make the node index contnous")
+            graph.make_node_index_continous(node_number)
         # try:
         #     signal.signal(signal.SIGALRM, myHandler)
         #     signal.alarm(10)

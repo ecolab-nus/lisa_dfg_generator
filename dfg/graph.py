@@ -85,6 +85,59 @@ class Graph:
         else:
             return True
 
+    def make_node_index_continous(self, max_node_index):
+        # print("vertex:", self.vertices)
+        # print("edges:",self.edges)
+        # print("backtrack_edges:",self.backtrack_edges)
+        # print("pred", self.pred)
+        # print("succ", self.succ)
+
+
+        node_index = 0
+        old_to_new =  {} 
+        for i  in range(max_node_index+1):
+            if i in self.vertices.keys():
+                node_index +=1
+                old_to_new[i] = node_index
+               
+        assert node_index == len(self.vertices.keys())
+
+        # print("old_to_new:", old_to_new)
+
+        temp_vertex = self.vertices.copy()
+        self.vertices.clear()
+        self.pred.clear()
+        self.succ.clear() 
+        for old_id, new_id in old_to_new.items():
+            self.vertices[new_id] = Vertex(id=str(new_id))
+            self.pred[new_id] = set()
+            self.succ[new_id] = set()
+
+        temp_edges = self.edges.copy()
+        self.edges.clear()
+
+        for src, des in temp_edges:
+            new_src = old_to_new[src]
+            new_des = old_to_new[des]
+            self.edges.add((new_src, new_des))
+            self.pred[new_des].add(new_src)
+            self.succ[new_src].add(new_des)
+
+        temp_back_edges = self.backtrack_edges.copy()
+        self.backtrack_edges.clear()
+        for src, des in temp_back_edges:
+            new_src = old_to_new[src]
+            new_des = old_to_new[des]
+            self.backtrack_edges.add((new_src, new_des))
+
+        # print("vertex:", self.vertices)
+        # print("edges:",self.edges)
+        # print("backtrack_edges:",self.backtrack_edges)
+        # print("pred", self.pred)
+        # print("succ", self.succ)
+
+
+
     def handle_cycle(self):
 
         self.backtrack_edges.clear()
