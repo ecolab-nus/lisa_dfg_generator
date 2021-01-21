@@ -38,5 +38,5 @@ for epoch in range(200):
 model.eval()
 _, pred = model(data).max(dim=1)
 correct = int(pred.eq(data.y).sum().item())
-acc = correct / len(data)
+acc = correct / len(data.y)
 print('Accuracy: {:.4f}'.format(acc))
