@@ -59,7 +59,9 @@ def single_dfg_gen(dir, i):
     asap_value = graph.ASAP()
     labels = graph.generate_simple_labels(asap_value, 2)
 
-    assert (len(graph.vertices) != 0)
+    if len(graph.vertices) == 0:
+        return False
+        
     # save graph info
     # Because graph in torch geometric counts vertices from 0, all generated nodes id will -1.
     with open(os.path.join(dir, "graph", str(i)+".txt"), "w") as f:
