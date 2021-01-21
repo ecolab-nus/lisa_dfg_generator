@@ -57,7 +57,7 @@ class dfg_dataset(InMemoryDataset):
 
     @property
     def raw_file_names(self):
-        graph_files = [os.path.join("graph", str(i)+'.txt') for i in range(3)]
+        graph_files = [os.path.join("graph", str(i)+'.txt') for i in range(1000)]
         return graph_files
 
     @property
@@ -65,7 +65,7 @@ class dfg_dataset(InMemoryDataset):
         return ['data.pt']
 
     def download(self):
-        generator(3, self.raw_dir)
+        generator(1000, self.raw_dir)
 
     def process(self):
         # Read data into huge `Data` list.

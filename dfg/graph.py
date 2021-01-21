@@ -126,6 +126,8 @@ class Graph:
         temp_back_edges = self.backtrack_edges.copy()
         self.backtrack_edges.clear()
         for src, des in temp_back_edges:
+            if (src not in old_to_new.keys() ) or ( des not in  old_to_new.keys()):
+                continue
             new_src = old_to_new[src]
             new_des = old_to_new[des]
             self.backtrack_edges.add((new_src, new_des))
