@@ -223,12 +223,12 @@ def dfg_json_maker(
     )
 
 
-    with open(file_name + ".json", "w") as buf:
-        _dfg_write_to_json(
-            buf,
-            edge_dic,
-            weight_dic,
-        )
+    # with open(file_name + ".json", "w") as buf:
+    #     _dfg_write_to_json(
+    #         buf,
+    #         edge_dic,
+    #         weight_dic,
+    #     )
     return edge_dic
 
 

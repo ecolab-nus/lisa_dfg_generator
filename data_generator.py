@@ -1,8 +1,7 @@
 import sys
 import random
 import os
-sys.path.append('graph_generation')
-sys.path.append('dfg')
+
 from graph_gen import *
 from graph import Graph, Vertex
 from tqdm import tqdm
