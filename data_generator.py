@@ -71,7 +71,7 @@ def single_dfg_gen(dir, i):
     # save tag info
     with open(os.path.join(dir, "label", str(i)+".txt"), "w") as f:
         for idx in range(len(labels)):
-            f.write(str(asap_value[idx+1])+'\t'+str(labels[idx+1])+'\n')
+            f.write(str(asap_value[idx+1])+'#'+str(labels[idx+1])+'\n')
 
     return True
 
