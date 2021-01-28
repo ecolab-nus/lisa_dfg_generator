@@ -1,7 +1,8 @@
-"""
-Simple graph implementation compatible with BokehGraph class.
-"""
 
+import sys
+sys.path.append('../graph_generation')
+import random
+from graph_gen import *
 
 class Vertex:
     """Represent a vertex with a label and possible connected component."""
@@ -267,6 +268,66 @@ class Graph:
             nodeL_labels[node] = value
         # print("node labels:", nodeL_labels)
         return nodeL_labels
+
+    def get_in_degree (self):
+        in_degree = {}
+        for node in self.vertices.keys():
+            node_in_degree = len(self.pred[node])
+            in_degree[node] = node_in_degree
+        return in_degree
+    
+    def get_out_degree (self):
+        out_degree = {}
+        for node in self.vertices.keys():
+            node_out_degree = len(self.succ[node])
+            out_degree[node] = node_out_degree
+        return out_degree
+
+if __name__ == "__main__":
+    MIN_NODE = 5
+    MAX_NODE = 10
+
+    number_node = random.choice(range(MIN_NODE, MAX_NODE))
+    min_edge = 2 # for each node
+    max_edge = random.choice(range(3, 5)) # for each node
+    edge_dic = dfg_json_maker(str(1), 0, 0, number_node, min_edge, max_edge, 0, 1, 2, 1)
+
+    graph = Graph()
+    for num in range(number_node):
+        graph.add_vertex(Vertex(id=str(num+1)))
+
+    for key,values in edge_dic.items():
+        for value in values:
+            graph.add_edge(key, value)
+
+    node_number = len(graph.vertices.keys())
+    graph.check_connectivity()
+    graph.handle_cycle()
+    if not graph.check_connectivity():
+        print("check connectivity false")
+        assert False
+
+    new_node_number = len(graph.vertices.keys())
+    if node_number != new_node_number:
+        #add somework to handle it
+        graph.make_node_index_continous(node_number)
+    
+    asap_value = graph.ASAP()
+    labels = graph.generate_simple_labels(asap_value, 2)
+
+    in_degree = graph.get_in_degree()
+    out_degree = graph.get_out_degree()
+    if len(graph.vertices) == 0:
+        assert False
+
+    print("edge", graph.edges)
+    print("asap_value", asap_value)
+    print("labels", labels)
+    print("in_degree", in_degree)
+    print("out_degree", out_degree)
+
+
+
 
 
 

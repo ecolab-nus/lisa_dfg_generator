@@ -15,7 +15,7 @@ def single_dfg_gen(dir, i):
     i: the id of graph
     """
     MIN_NODE = 15
-    MAX_NODE = 20
+    MAX_NODE = 100
 
     number_node = random.choice(range(MIN_NODE, MAX_NODE))
     min_edge = 2 # for each node
