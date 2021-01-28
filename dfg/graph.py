@@ -256,10 +256,12 @@ class Graph:
         for (node, avalue) in asap_value.items():
             value = avalue
             in_degree = len(self.pred[node])
-            if in_degree > indegree_threashold:
+            if in_degree == 0:
+                value = avalue
+            elif in_degree >= indegree_threashold:
                 value -= int (in_degree/indegree_threashold)
             else:
-                value -= indegree_threashold - in_degree
+                value += indegree_threashold - in_degree
             if value < 0:
                 value = 0
             nodeL_labels[node] = value
