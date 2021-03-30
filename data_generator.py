@@ -28,12 +28,13 @@ def single_dfg_gen(dir, i):
     """
     i: the id of graph
     """
-    MIN_NODE = 5
-    MAX_NODE = 10
+    MIN_NODE = 10
+    MAX_NODE = 25
 
     number_node = random.choice(range(MIN_NODE, MAX_NODE))
+    # print("i", "number of node", number_node)
     min_edge = 3 # for each node
-    max_edge =  randint(4, 5) # for each node
+    max_edge =  randint(3, 4) # for each node
     edge_dic = dfg_json_maker(str(1), 0, 0, number_node, min_edge, max_edge, 0, 1, 2, 1)
 
     graph = Graph(str(i))
