@@ -3,28 +3,32 @@ import sys
 sys.path.append('../graph_generation')
 import random
 from graph_gen import *
-
+from random import seed
+from random import randint
 class Vertex:
     """Represent a vertex with a label and possible connected component."""
     # pylint: disable=too-few-public-methods
     # Using class so it's hashable, even though it doesn't have public methods
-    def __init__(self, id, component=-1):
+    def __init__(self, id, opcode=""):
         self.id = id
-        self.component = component
+        self.opcode = opcode
+        self.operand = 0
 
     def __repr__(self):
-        return 'Vertex: ' + self.id
+        return 'Vertex: ' + self.id + self.opcode
 
 
 class Graph:
     """Represent a graph as a dictionary of vertices mapping labels to edges."""
-    def __init__(self):
+    def __init__(self, name_ ):
+        self.name =  name_
         self.vertices = {}
         self.num_vertices = 0
         self.edges = set()
         self.backtrack_edges = set()
         self.pred = {}
         self.succ = {}
+        self.asap = {}
 
     def add_vertex(self, vertex):
         """Add a new vertex, optionally with edges to other vertices."""
@@ -74,8 +78,10 @@ class Graph:
         for node in temp_vert.keys():
             # remove lonely node
             if len(self.pred[node]) != 0 or len(self.succ[node]) != 0:
+                # print(node, len(self.pred[node]), len(self.succ[node]))
                 self.vertices[node] = temp_vert[node]
 
+        # print()
 
         start_node = set()
         for node in self.vertices.keys():
@@ -191,8 +197,18 @@ class Graph:
                         self.edges.add(edge)
                         self.pred[edge[1]].add(edge[0])
                         self.succ[edge[0]].add(edge[1])
-
-
+            # print("vertices ", self.vertices)
+            # print("pred ", self.pred)
+            # print("succ ", self.succ)
+            temp_node = self.vertices.copy()
+            self.vertices.clear()
+            for node in temp_node.keys():
+                if len(self.pred[node]) == 0 and len(self.succ[node]) == 0 :
+                    continue
+                else:
+                    self.vertices[node] = temp_node[node]
+            
+            # print("after process vertices ", self.vertices)
             if len(cycle_edges) == 0:
                 break
 
@@ -248,6 +264,7 @@ class Graph:
 
 
         # print("ASAP value: ",asap_value)
+        self.asap = asap_value
         return asap_value
 
     def generate_simple_labels(self, asap_value, indegree_threashold):
@@ -282,6 +299,95 @@ class Graph:
             node_out_degree = len(self.succ[node])
             out_degree[node] = node_out_degree
         return out_degree
+
+
+    def satisfy_cgra_me_constraint(self):
+        # the number of input  node must be less or equal to 2
+        # print("satisfy_cgra_me_constraint")
+        # print("vertex:", self.vertices)
+        # print("edges:",self.edges)
+        # print("backtrack_edges:",self.backtrack_edges)
+        # print("pred", self.pred)
+        # print("succ", self.succ)
+        temp_pred = {}
+        for node_id in self.vertices.keys():
+            pred_limit = 2
+            if len(self.succ[node_id]) == 0:
+                pred_limit = randint(1,2)
+            if len(self.pred[node_id]) <= pred_limit:
+                curr_pred = self.pred[node_id]
+                curr_pred = list(curr_pred)
+                temp_pred[node_id] = curr_pred
+            else:
+                diff = len(self.pred[node_id]) - pred_limit
+                curr_pred = self.pred[node_id]
+                curr_pred = list(curr_pred)
+                sorted(curr_pred, key=lambda x: len(self.succ[x]))    
+                # print("befor", curr_pred)    
+                curr_pred = curr_pred[0:pred_limit]
+                # print("after", curr_pred)  
+                temp_pred[node_id] = curr_pred
+        # print("cgrame: temp_pred", temp_pred)
+        self.edges.clear()
+        self.pred.clear()
+        self.succ.clear()
+
+        for node in self.vertices.keys():
+            self.succ[node] = set()
+            self.pred[node] = set()
+
+        for node_id, preds in temp_pred.items():
+            for pred in preds:
+                self.edges.add((pred, node_id))
+                self.pred[node_id].add(pred)
+                self.succ[pred].add(node_id)
+        # print("cgrame: pred", self.pred)
+        # print("cgrame: succ", self.succ)
+                
+
+        
+
+    def dump_cgra_me_str(self):
+        start_node = "const"
+        two_op_general_op = ["add", "sub", "mul"]
+        one_op_general_op = ["load"]
+        two_op_op_num = len(two_op_general_op) - 1
+        otuput_op = "output"
+        for node_id in self.vertices.keys():
+            succ = self.succ[node_id]
+            pred = self.pred[node_id]
+            if len(succ) == 0 and len(pred) == 2 :
+                self.vertices[node_id].opcode = "store"
+            elif len(succ) == 0 and len(pred) == 1 :
+                self.vertices[node_id].opcode = "output"
+            elif len(self.pred[node_id]) == 0:
+                self.vertices[node_id].opcode = start_node
+            elif len(self.pred[node_id]) == 1:
+                 self.vertices[node_id].opcode = "load"
+            elif len(self.pred[node_id]) == 2:
+                 self.vertices[node_id].opcode = two_op_general_op[random.randint(0, two_op_op_num)]
+            self.vertices[node_id].operand = len(succ)
+        final_str = ""
+        for node_id in self.vertices.keys():
+            node = self.vertices[node_id]
+            final_str += node.opcode + str(node_id) + "[opcode=" +  node.opcode + "]; \n"
+        
+        max_asap = 0
+        for id, asap_ in self.asap.items():
+            max_asap = max(max_asap, asap_)
+        for target_asap in range(0, max_asap +1 ):
+            for nodeid, node in self.vertices.items():
+                if self.asap[nodeid] is target_asap:
+                    operand = 0
+                    temp_name = node.opcode + str(node.id)
+                    for pred in self.pred[nodeid]:
+                         final_str += self.vertices[pred].opcode + str(self.vertices[pred].id) + "->" + temp_name + "[operand=" + str(operand) +"];\n"
+                         operand += 1
+
+        return final_str
+
+
+
 
 if __name__ == "__main__":
     MIN_NODE = 5

@@ -1,28 +1,42 @@
 import sys
 import random
 import os
-
+from random import seed
+from random import randint
 from graph_gen import *
-from graph import Graph, Vertex
+from dfg import Graph, Vertex
 from tqdm import tqdm
 import signal
 
 def myHandler(signum, frame):
     raise Exception("TimeoutError")
 
+
+def dump_cgra_me_graph(dir, graph: Graph) :
+    graph_name = graph.name
+   
+
+    with open(os.path.join(dir, "cgra_me", graph_name+".dot"), "w") as f:
+        f.write("digraph G { \n")
+        f.write(graph.dump_cgra_me_str())
+        f.write("}\n")
+    
+    return True
+    
+
 def single_dfg_gen(dir, i):
     """
     i: the id of graph
     """
-    MIN_NODE = 15
-    MAX_NODE = 100
+    MIN_NODE = 5
+    MAX_NODE = 10
 
     number_node = random.choice(range(MIN_NODE, MAX_NODE))
-    min_edge = 2 # for each node
-    max_edge = random.choice(range(3, 5)) # for each node
+    min_edge = 3 # for each node
+    max_edge =  randint(4, 5) # for each node
     edge_dic = dfg_json_maker(str(1), 0, 0, number_node, min_edge, max_edge, 0, 1, 2, 1)
 
-    graph = Graph()
+    graph = Graph(str(i))
     for num in range(number_node):
         graph.add_vertex(Vertex(id=str(num+1)))
 
@@ -33,10 +47,16 @@ def single_dfg_gen(dir, i):
     node_number = len(graph.vertices.keys())
     graph.check_connectivity()
     graph.handle_cycle()
+    if len(graph.vertices) == 0:
+        return False
+    graph.satisfy_cgra_me_constraint()
     if not graph.check_connectivity():
         # print("did not generate", i)
         return False
-
+    graph.satisfy_cgra_me_constraint()
+    if not graph.check_connectivity():
+        # print("did not generate", i)
+        return False
     new_node_number = len(graph.vertices.keys())
     if node_number != new_node_number:
         #add somework to handle it
@@ -73,6 +93,8 @@ def single_dfg_gen(dir, i):
         for idx in range(len(labels)):
             f.write(str(asap_value[idx+1])+'#'+str(labels[idx+1])+'\n')
 
+    dump_cgra_me_graph(dir, graph)
+
     return True
 
 def generator(n_data, dir):
@@ -85,6 +107,8 @@ def generator(n_data, dir):
         os.makedirs(dir, exist_ok=True)
     if not os.path.exists(os.path.join(dir, "graph")):
         os.mkdir(os.path.join(dir, "graph"))
+    if not os.path.exists(os.path.join(dir, "cgra_me")):
+        os.mkdir(os.path.join(dir, "cgra_me"))
     if not os.path.exists(os.path.join(dir, "label")):
         os.mkdir(os.path.join(dir, "label"))
 
