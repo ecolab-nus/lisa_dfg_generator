@@ -6,4 +6,4 @@ from data_generator import generator
 
 
 
-generator(10, "../data")
+generator(100, "../data")

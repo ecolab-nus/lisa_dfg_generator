@@ -50,13 +50,12 @@ def single_dfg_gen(dir, i):
     graph.handle_cycle()
     if len(graph.vertices) == 0:
         return False
-    graph.satisfy_cgra_me_constraint()
-    if not graph.check_connectivity():
+    
+    if not graph.satisfy_cgra_me_constraint():
         # print("did not generate", i)
         return False
-    graph.satisfy_cgra_me_constraint()
     if not graph.check_connectivity():
-        # print("did not generate", i)
+        # 
         return False
     new_node_number = len(graph.vertices.keys())
     if node_number != new_node_number:

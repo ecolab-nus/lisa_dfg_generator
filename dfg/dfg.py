@@ -309,6 +309,8 @@ class Graph:
         # print("backtrack_edges:",self.backtrack_edges)
         # print("pred", self.pred)
         # print("succ", self.succ)
+
+        # check input node limiation
         temp_pred = {}
         for node_id in self.vertices.keys():
             pred_limit = 2
@@ -344,8 +346,38 @@ class Graph:
         # print("cgrame: pred", self.pred)
         # print("cgrame: succ", self.succ)
                 
-
+        # check load number
+        node_num = len(self.vertices.keys())
+        load_node_num = 0
+        for node_id in self.vertices.keys():
+            if len(self.succ[node_id]) != 0 and len(self.pred[node_id]) != 0 :
+                if len(self.pred[node_id]) == 1:
+                    load_node_num += 1
+        if float(load_node_num) / node_num > 0.1:
+            return False
         
+        # check store number
+        node_num = len(self.vertices.keys())
+        store_node_num = 0
+        for node_id in self.vertices.keys():
+            if len(self.succ[node_id]) == 0 :
+                if len(self.pred[node_id]) == 2:
+                    store_node_num += 1
+        if float(store_node_num) / node_num > 0.1:
+            return False
+
+        # check output number
+        node_num = len(self.vertices.keys())
+        output_node_num = 0
+        for node_id in self.vertices.keys():
+            if len(self.succ[node_id]) == 0 :
+                if len(self.pred[node_id]) == 1:
+                    output_node_num += 1
+        if float(output_node_num) / node_num > 0.2:
+            return False
+
+        return True
+            
 
     def dump_cgra_me_str(self):
         start_node = "const"
