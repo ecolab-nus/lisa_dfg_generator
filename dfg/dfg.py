@@ -410,7 +410,7 @@ class Graph:
             for nodeid, node in self.vertices.items():
                 if self.asap[nodeid] is target_asap:
                     operand = 0
-                    temp_name = node.opcode + str(node.id)
+                    temp_name = node.opcode + str(int(node.id) - 1) 
                     for pred in self.pred[nodeid]:
                          final_str += self.vertices[pred].opcode + str(int(self.vertices[pred].id) - 1) + "->" + temp_name + "[operand=" + str(operand) +"];\n"
                          operand += 1
