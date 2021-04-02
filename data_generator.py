@@ -89,7 +89,7 @@ def single_dfg_gen(dir, i):
             f.write(str(start_node-1)+'\t'+str(end_node-1)+'\n')
 
     # save tag info
-    with open(os.path.join(dir, "label", str(i)+".txt"), "w") as f:
+    with open(os.path.join(dir, "graph", str(i)+"_feature.txt"), "w") as f:
         for idx in range(len(labels)):
             f.write(str(asap_value[idx+1])+'#'+str(labels[idx+1])+'\n')
 
@@ -97,7 +97,7 @@ def single_dfg_gen(dir, i):
 
     return True
 
-def generator(n_data, dir):
+def generator(n_data, dir, satrt_index = 0):
     """
     n_data: long, number of graphs as training data set
     """
@@ -112,7 +112,7 @@ def generator(n_data, dir):
     if not os.path.exists(os.path.join(dir, "label")):
         os.mkdir(os.path.join(dir, "label"))
 
-    for i in tqdm(range(n_data)):
+    for i in tqdm(range(satrt_index, n_data)):
         while True:
             if single_dfg_gen(dir, i):
                 break
