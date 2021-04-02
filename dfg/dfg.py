@@ -12,7 +12,6 @@ class Vertex:
     def __init__(self, id, opcode=""):
         self.id = id
         self.opcode = opcode
-        self.operand = 0
 
     def __repr__(self):
         return 'Vertex: ' + self.id + self.opcode
@@ -402,7 +401,7 @@ class Graph:
         final_str = ""
         for node_id in self.vertices.keys():
             node = self.vertices[node_id]
-            final_str += node.opcode + str(node_id) + "[opcode=" +  node.opcode + "]; \n"
+            final_str += node.opcode + str(node_id - 1) + "[opcode=" +  node.opcode + "]; \n"
         
         max_asap = 0
         for id, asap_ in self.asap.items():
@@ -413,7 +412,7 @@ class Graph:
                     operand = 0
                     temp_name = node.opcode + str(node.id)
                     for pred in self.pred[nodeid]:
-                         final_str += self.vertices[pred].opcode + str(self.vertices[pred].id) + "->" + temp_name + "[operand=" + str(operand) +"];\n"
+                         final_str += self.vertices[pred].opcode + str(int(self.vertices[pred].id) - 1) + "->" + temp_name + "[operand=" + str(operand) +"];\n"
                          operand += 1
 
         return final_str

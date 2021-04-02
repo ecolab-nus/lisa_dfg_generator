@@ -91,9 +91,14 @@ def single_dfg_gen(dir, i):
     # save tag info
     with open(os.path.join(dir, "graph", str(i)+"_feature.txt"), "w") as f:
         for idx in range(len(labels)):
-            f.write(str(asap_value[idx+1])+'#'+str(labels[idx+1])+'\n')
+            f.write(str(asap_value[idx+1])+'\n')
+
 
     dump_cgra_me_graph(dir, graph)
+
+    with open(os.path.join(dir, "graph", str(i)+"_op.txt"), "w") as f:
+        for idx in range(len(labels)):
+            f.write(str(graph.vertices[idx+1].opcode)+'\n')
 
     return True
 
