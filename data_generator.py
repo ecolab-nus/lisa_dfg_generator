@@ -57,9 +57,9 @@ def single_dfg_gen(dir, i):
         # 
         return False
     new_node_number = len(graph.vertices.keys())
-    if node_number != new_node_number:
+    #if node_number != new_node_number:
         #add somework to handle it
-        graph.make_node_index_continous(node_number)
+    graph.make_node_index_continous(node_number)
     # try:
     #     signal.signal(signal.SIGALRM, myHandler)
     #     signal.alarm(10)
@@ -75,6 +75,8 @@ def single_dfg_gen(dir, i):
     #             start_node, end_node = edge
     #             f.write(str(start_node - 1) + '\t' + str(end_node - 1) + '\n')
     asap_value = graph.set_ASAP()
+    graph.set_node_feature()
+    graph.get_same_level_node()
 
     if len(graph.vertices) == 0:
         return False
@@ -115,7 +117,7 @@ def generator(n_data, dir, satrt_index = 0):
     if not os.path.exists(os.path.join(dir, "label")):
         os.mkdir(os.path.join(dir, "label"))
 
-    for i in tqdm(range(satrt_index, n_data)):
+    for i in tqdm(range(satrt_index, n_data + satrt_index)):
         while True:
             if single_dfg_gen(dir, i):
                 break
