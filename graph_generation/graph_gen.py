@@ -1084,3 +1084,12 @@ def gexf_maker(
         buf.write(" " * 4 + "</graph>\n")
         buf.write("</gexf>")
     return edge_number
+
+if __name__ == "__main__":
+    GRAPH_NUMERS = 10
+    MIN_NODE = 20
+    MAX_NODE = 50
+    print ("start")
+    for i in range (GRAPH_NUMERS):
+        number_node = random_system.choice(range(MIN_NODE, MAX_NODE))
+        dfg_json_maker(str(i), 0, 0, number_node, 1, 3, 0, 1, 2, 1)

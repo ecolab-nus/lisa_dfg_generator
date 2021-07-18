@@ -4,7 +4,7 @@ import os
 from random import seed
 from random import randint
 from graph_gen import *
-from dfg import Graph, Vertex
+from dfg import DFGGraph, Vertex
 from tqdm import tqdm
 import signal
 
@@ -12,9 +12,8 @@ def myHandler(signum, frame):
     raise Exception("TimeoutError")
 
 
-def dump_cgra_me_graph(dir, graph: Graph) :
+def dump_cgra_me_graph(dir, graph: DFGGraph) :
     graph_name = graph.name
-   
 
     with open(os.path.join(dir, "cgra_me", graph_name+".dot"), "w") as f:
         f.write("digraph G { \n")
@@ -37,7 +36,7 @@ def single_dfg_gen(dir, i):
     max_edge =  randint(3, 4) # for each node
     edge_dic = dfg_json_maker(str(1), 0, 0, number_node, min_edge, max_edge, 0, 1, 2, 1)
 
-    graph = Graph(str(i))
+    graph = DFGGraph(str(i))
     for num in range(number_node):
         graph.add_vertex(Vertex(id=str(num+1)))
 
@@ -75,8 +74,7 @@ def single_dfg_gen(dir, i):
     #         for edge in graph.edges:
     #             start_node, end_node = edge
     #             f.write(str(start_node - 1) + '\t' + str(end_node - 1) + '\n')
-    asap_value = graph.ASAP()
-    labels = graph.generate_simple_labels(asap_value, 2)
+    asap_value = graph.set_ASAP()
 
     if len(graph.vertices) == 0:
         return False
@@ -86,19 +84,19 @@ def single_dfg_gen(dir, i):
     with open(os.path.join(dir, "graph", str(i)+".txt"), "w") as f:
         for edge in graph.edges:
             start_node, end_node = edge
-            f.write(str(start_node-1)+'\t'+str(end_node-1)+'\n')
-
-    # save tag info
-    with open(os.path.join(dir, "graph", str(i)+"_feature.txt"), "w") as f:
-        for idx in range(len(labels)):
-            f.write(str(asap_value[idx+1])+'\n')
+            f.write(str(start_node)+'\t'+str(end_node)+'\n')
 
 
     dump_cgra_me_graph(dir, graph)
 
+    # save tag info
+    with open(os.path.join(dir, "graph", str(i)+"_feature.txt"), "w") as f:
+        for idx in range(len(asap_value)):
+            f.write(str(asap_value[idx])+'\n')
+
     with open(os.path.join(dir, "graph", str(i)+"_op.txt"), "w") as f:
-        for idx in range(len(labels)):
-            f.write(str(graph.vertices[idx+1].opcode)+'\n')
+        for idx in range(len(asap_value)):
+            f.write(str(graph.vertices[idx].opcode)+'\n')
 
     return True
 
