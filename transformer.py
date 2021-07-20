@@ -47,7 +47,7 @@ def get_graph(graph_filename, graph_path, new_graph_path):
 
         f.write("####\n")
 
-        f.write(graph.get_node_num_in_between())
+        f.write(graph.generate_edge_feature())
 
 
 

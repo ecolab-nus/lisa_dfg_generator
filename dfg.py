@@ -379,7 +379,7 @@ class DFGGraph:
         for node in descendants.keys():
             self.vertices[node].no_descendant = len(descendants[node])
 
-    def get_node_num_in_between(self):
+    def generate_edge_feature(self):
         final_str = ""
         for src,des in self.edges:
             src_asap = self.asap[src]
@@ -391,7 +391,7 @@ class DFGGraph:
                     num_inbetween_node +=1
                 if node_asap == src_asap or node_asap == des_asap:
                     same_asap_node +=1
-            final_str += str(src) + " " + str(des) + " "+ str(num_inbetween_node) + " "+ str(same_asap_node) + " "+ str(des_asap-src_asap) + "\n"
+            final_str += str(src) + " " + str(des) + " "+ str(num_inbetween_node) + " "+ str(same_asap_node) + " "+ str(des_asap-src_asap)  + "\n"
         return final_str
             
 
@@ -625,7 +625,7 @@ class DFGGraph:
         final_str = ""
         for node_id in self.vertices.keys():
             node = self.vertices[node_id]
-            final_str += node.opcode + str(node_id - 1) + "[opcode=" +  node.opcode + "]; \n"
+            final_str += node.opcode + str(node_id ) + "[opcode=" +  node.opcode + "]; \n"
         
         max_asap = 0
         for id, asap_ in self.asap.items():
@@ -634,9 +634,9 @@ class DFGGraph:
             for nodeid, node in self.vertices.items():
                 if self.asap[nodeid] is target_asap:
                     operand = 0
-                    temp_name = node.opcode + str(int(node.id) - 1) 
+                    temp_name = node.opcode + str(int(node.id) ) 
                     for pred in self.pred[nodeid]:
-                         final_str += self.vertices[pred].opcode + str(int(self.vertices[pred].id) - 1) + "->" + temp_name + "[operand=" + str(operand) +"];\n"
+                         final_str += self.vertices[pred].opcode + str(int(self.vertices[pred].id) ) + "->" + temp_name + "[operand=" + str(operand) +"];\n"
                          operand += 1
 
         return final_str
