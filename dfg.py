@@ -378,12 +378,69 @@ class DFGGraph:
         
         for node in descendants.keys():
             self.vertices[node].no_descendant = len(descendants[node])
+        return 
+
+    def number_dependent_nodes_in_between (self, ancestor, descendant):
+
+        max_asap = 0
+        for node, node_asap in self.asap.items():
+            max_asap = max(max_asap, node_asap)
+
+        descendants = {}
+        ancestors = {}
+        for node in self.vertices.keys():
+            descendants[node] = set()
+            ancestors[node] = set()
+        
+        
+        for asap_val in range(max_asap, -1, -1):
+            for node, node_asap in self.asap.items():
+                if node_asap == asap_val:
+                    for  succ in self.succ[node]:
+                        descendants[node].add(succ)
+                        for desc in descendants[succ]:
+                            descendants[node].add(desc)
+
+        for asap_val in range(0, max_asap+1):
+            for node, node_asap in self.asap.items():
+                if node_asap == asap_val:
+                    for  pred in self.pred[node]:
+                        ancestors[node].add(pred)
+                        for anc in ancestors[pred]:
+                            ancestors[node].add(anc)
+        
+        ancestor_asap =  self.asap[ancestor]
+        descendant_asap =  self.asap[descendant]
+
+        num_dependent_node = 0
+        for node, node_asap in self.asap.items():
+            if node in descendants[ancestor] and node in ancestors[descendant]:
+                num_dependent_node +=1
+        return num_dependent_node
+
+
+    def number_nodes_in_between (self, a_asap, b_asap):
+        num_inbetween_node = 0
+        for node, node_asap in self.asap.items():
+            if a_asap < node_asap < b_asap or b_asap < node_asap < a_asap:
+                num_inbetween_node +=1
+        return  num_inbetween_node
+
+
+    def get_same_asap_nodes (self, asap_value):
+        same_asap_node = 0
+        for node, node_asap in self.asap.items():
+            if node_asap == asap_value:
+                same_asap_node +=1
+        return  same_asap_node
 
     def generate_edge_feature(self):
         final_str = ""
         for src,des in self.edges:
             src_asap = self.asap[src]
             des_asap = self.asap[des]
+            ancestor = self.vertices[src].no_ancestor
+            descendant = self.vertices[src].no_descendant
             num_inbetween_node = 0
             same_asap_node = 0
             for node, node_asap in self.asap.items():
@@ -391,7 +448,8 @@ class DFGGraph:
                     num_inbetween_node +=1
                 if node_asap == src_asap or node_asap == des_asap:
                     same_asap_node +=1
-            final_str += str(src) + " " + str(des) + " "+ str(num_inbetween_node) + " "+ str(same_asap_node) + " "+ str(des_asap-src_asap)  + "\n"
+            final_str += str(src) + " " + str(des) + " "+ str(num_inbetween_node) + " "+ str(same_asap_node) + " "+ str(des_asap-src_asap)  \
+            + " "+ str(ancestor) + " "+ str(descendant)+ "\n"
         return final_str
             
 
@@ -446,18 +504,47 @@ class DFGGraph:
                     for des in ancestors[a_node]:
                         if des in ancestors[b_node]:
                             common_anc.append((des, self.asap[des]))
+                    level_asap = self.asap[a_node]        
+                    exist_des_and_anc = 0
                     if len(common_des) > 0 or len(common_anc) > 0:
+                        if len(common_des) > 0 and len(common_anc) > 0:
+                            exist_des_and_anc  = 1
                         common_des.sort(key  = lambda x: x[1])
                         common_anc.sort(key  = lambda x: x[1])
                         # print(common_des)
-                        total_value = 0
+                        ancestor_dist = 0
+                        descendant_dist = 0
+                        ancestor_node_ine_betweeen = 0
+                        descendant_node_ine_betweeen = 0
+                        num_parallel_node = self.get_same_asap_nodes(level_asap)
+                        dependent_node_with_ancestor = 0
+                        dependent_node_with_descendant = 0
+                        
                         if len(common_anc) >0:
-                            total_value += common_anc[0][1]
+                            ancestor_dist = level_asap - common_anc[0][1]
+                            num_parallel_node += self.get_same_asap_nodes(common_anc[0][1])
+                            ancestor_node_ine_betweeen = self.number_nodes_in_between (common_anc[0][1], level_asap)
+                            dependent_node_with_ancestor = self.number_dependent_nodes_in_between( common_anc[0][0], a_node)
+                            dependent_node_with_ancestor += self.number_dependent_nodes_in_between( common_anc[0][0], b_node)
                         if len(common_des) >0:
-                            total_value+=   common_des[0][1]
-                        same_level_node_dist[(a_node, b_node)] = total_value
+                            num_parallel_node += self.get_same_asap_nodes(common_des[-1][1])
+                            descendant_dist = common_des[len(common_des)-1][1] - level_asap
+                            descendant_node_ine_betweeen = self.number_nodes_in_between (common_des[-1][1], level_asap)
+                            dependent_node_with_descendant += self.number_dependent_nodes_in_between(  a_node, common_des[-1][0])
+                            dependent_node_with_descendant += self.number_dependent_nodes_in_between(  b_node, common_des[-1][0])
+                        
+                        same_level_node_dist[(a_node, b_node)] = [ancestor_dist, descendant_dist, \
+                             ancestor_node_ine_betweeen, descendant_node_ine_betweeen,\
+                                  num_parallel_node, dependent_node_with_ancestor,  dependent_node_with_descendant, exist_des_and_anc]
+                        # same_level_node_dist[(a_node, b_node)] = [descendant_dist, \
+                            #   descendant_node_ine_betweeen, num_parallel_node,  dependent_node_with_descendant]
+            #shortest path
+            #number of nodes to the common consumer or producer node
             for nodes, dist in same_level_node_dist.items():
-                final_str += str(nodes[0]) + " " + str(nodes[1]) + " "+ str(dist) + "\n"
+                final_str += str(nodes[0]) + " " + str(nodes[1]) 
+                for item in dist:
+                    final_str += " "+ str(item)
+                final_str+= "\n"
 
         return final_str 
                 

@@ -6,4 +6,4 @@ from data_generator import generator
 
 
 
-generator(600, "../data",400)
+generator(214, "../data", satrt_index = 1286)
