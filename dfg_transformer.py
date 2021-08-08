@@ -2,7 +2,7 @@ from dfg import DFGGraph, Vertex
 import os
 import pathlib
 
-def get_graph(graph_filename, graph_path, new_graph_path):
+def transform_single_graph(graph_filename, graph_path, new_graph_path):
     graph_id = str(graph_filename)[0:-4]
     print(graph_id)
     opcode_file = open(graph_path+"/" +graph_id + "_op.txt")
@@ -57,7 +57,7 @@ def get_graph(graph_filename, graph_path, new_graph_path):
 
 
 
-def update_graph_by_dir():
+def transform_graph_by_dir():
     path = pathlib.Path().absolute()
     data_path = os.path.join(path.parent, 'data')
     graph_path = os.path.join(data_path, 'graph')
@@ -67,9 +67,9 @@ def update_graph_by_dir():
         if "feature" in str(file) or "op" in str(file): 
             continue
         print(file)
-        get_graph(file, graph_path, new_graph_path)
+        transform_single_graph(file, graph_path, new_graph_path)
         
 
 if __name__ == "__main__":
-    update_graph_by_dir()
+    transform_graph_by_dir()
 

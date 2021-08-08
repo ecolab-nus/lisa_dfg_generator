@@ -1,12 +1,15 @@
+
 import sys
 import random
 import os
+sys.path.append('graph_generation')
 from random import seed
 from random import randint
 from graph_gen import *
 from dfg import DFGGraph, Vertex
 from tqdm import tqdm
 import signal
+import argparse
 
 def myHandler(signum, frame):
     raise Exception("TimeoutError")
@@ -121,3 +124,20 @@ def generator(n_data, dir, satrt_index = 0):
         while True:
             if single_dfg_gen(dir, i):
                 break
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Process dfg_generator parameter.')
+    parser.add_argument("-s", "--start_index", default=0, type=int, help="increase output verbosity")
+    parser.add_argument("-n", "--num_graph",default=10, type=int, help="numer_graphes")
+
+
+    args = parser.parse_args()
+    # print(args.accumulate(args.integers))
+    print("number of graph:", args.num_graph)
+    print("start index", args.start_index)
+
+    # assert(False)
+
+    generator(args.num_graph, "../data", satrt_index = args.start_index)
