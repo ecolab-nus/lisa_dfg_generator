@@ -129,15 +129,15 @@ def generator(n_data, dir, satrt_index = 0):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Process dfg_generator parameter.')
-    parser.add_argument("-s", "--start_index", default=0, type=int, help="increase output verbosity")
-    parser.add_argument("-n", "--num_graph",default=10, type=int, help="numer_graphes")
+    parser.add_argument("-s", "--start_index", default=0, type=int, help="the start index of graph")
+    parser.add_argument("-n", "--graph_num",default=10, type=int, help="the number of generated graphes")
 
 
     args = parser.parse_args()
     # print(args.accumulate(args.integers))
-    print("number of graph:", args.num_graph)
+    print("number of graph:", args.graph_num)
     print("start index", args.start_index)
 
     # assert(False)
 
-    generator(args.num_graph, "../data", satrt_index = args.start_index)
+    generator(args.graph_num, "../data", satrt_index = args.start_index)
