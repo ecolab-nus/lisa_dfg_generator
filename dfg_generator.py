@@ -105,7 +105,7 @@ def single_dfg_gen(dir, i):
 
     return True
 
-def generator(n_data, dir, satrt_index = 0):
+def generator(n_data, dir, model, satrt_index = 0):
     """
     n_data: long, number of graphs as training data set
     """
@@ -115,10 +115,10 @@ def generator(n_data, dir, satrt_index = 0):
         os.makedirs(dir, exist_ok=True)
     if not os.path.exists(os.path.join(dir, "graph")):
         os.mkdir(os.path.join(dir, "graph"))
-    if not os.path.exists(os.path.join(dir, "cgra_me")):
-        os.mkdir(os.path.join(dir, "cgra_me"))
-    if not os.path.exists(os.path.join(dir, "label")):
-        os.mkdir(os.path.join(dir, "label"))
+    if not os.path.exists(os.path.join(dir, model)):
+        os.mkdir(os.path.join(dir, model))
+    # if not os.path.exists(os.path.join(dir, "label")):
+    #     os.mkdir(os.path.join(dir, "label"))
 
     for i in tqdm(range(satrt_index, n_data + satrt_index)):
         while True:
@@ -131,13 +131,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process dfg_generator parameter.')
     parser.add_argument("-s", "--start_index", default=0, type=int, help="the start index of graph")
     parser.add_argument("-n", "--graph_num",default=10, type=int, help="the number of generated graphes")
+    parser.add_argument("-d", "--directory",default="cgra_me", help="the number of generated graphes")
 
 
     args = parser.parse_args()
     # print(args.accumulate(args.integers))
     print("number of graph:", args.graph_num)
     print("start index", args.start_index)
+    print("directory", args.directory)
 
     # assert(False)
 
-    generator(args.graph_num, "../data", satrt_index = args.start_index)
+    generator(args.graph_num, "../data/"+args.directory, model = args.directory, satrt_index = args.start_index)

@@ -65,21 +65,23 @@ def transform_graph_by_dir(home, src, dest):
     graph_path = os.path.join(data_path, src)
     new_graph_path = os.path.join(data_path, dest)
     graph_files = os.listdir(graph_path)
+    num = 0
     for file in graph_files:
         if "feature" in str(file) or "op" in str(file): 
             continue
         # print(file)
         transform_single_graph(file, graph_path, new_graph_path)
+        num+=1
     
-    print("transformation done")
+    print("transformation done for "+str(num) + " graphs")
         
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Process dfg_generator parameter.')
-    parser.add_argument( "--home_directory", default="data",  help="the home directory. In general do not use this")
+    parser = argparse.ArgumentParser(description='Process dfg_transformer parameter.')
+    parser.add_argument( "--home_directory", default="cgra_me",  help="the home directory of graph files")
     parser.add_argument("-s", "--source_directory", default="graph",  help="the source directory of graph")
-    parser.add_argument("-d", "--destination_directory", default="new_graph",  help="the desination of transformed graphes")
+    parser.add_argument("-d", "--destination_directory", default="transformered_graph",  help="the desination of transformed graphes")
 
     args = parser.parse_args()
     print("home directory:", args.home_directory)
