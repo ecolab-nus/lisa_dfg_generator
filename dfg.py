@@ -55,19 +55,24 @@ morpher_store_opcode[3] = ["STORE"]
 
 
 def indent(elem, level=0):
-        i = "\n" + level*""
+        i = "\n"
+        
         if len(elem):
             if not elem.text or not elem.text.strip():
-                elem.text = i + ""
+                elem.text = i + "" 
             if not elem.tail or not elem.tail.strip():
-                elem.tail = i
+                elem.tail = i 
             for elem in elem:
                 indent(elem, level+1)
-            if not elem.tail or not elem.tail.strip():
                 elem.tail = i
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i 
         else:
             if level and (not elem.tail or not elem.tail.strip()):
-                elem.tail = i
+                
+                elem.tail = i 
+        
+        
 
 
 class Vertex:
@@ -871,30 +876,52 @@ class DFGGraph:
 
 
         dfg = ET.Element("DFG", count = str(len(self.vertices)))
+        dfg.tail = "\n"
+        dfg.text = "\n"
         for index, vert in self.vertices.items():
             print(index)
             node = ET.SubElement(dfg, "Node", idx=str(index), ASAP = str(self.asap[index]), ALAP = "0", CONST="0", BB="random")
-            ET.SubElement(node, "OP").text = vert.opcode
-            ET.SubElement(node, "BasePointerName", size="1").text="random"
+            # node = ET.Element( "Node", idx=str(index), ASAP = str(self.asap[index]), ALAP = "0", CONST="0", BB="random")
+            node.tail = "\n\n"
+            node.text = "\n"
+
+            op = ET.SubElement(node, "OP")
+            op.text = vert.opcode
+            op.tail = "\n"
+
+
+            BasePointerName = ET.SubElement(node, "BasePointerName", size="1")
+            BasePointerName.text="random"
+            BasePointerName.tail = "\n"
 
             inputs = ET.SubElement(node, "Inputs")
+            inputs.tail = "\n"
+            inputs.text = "\n"
             for parent in self.pred[index]:
-                ET.SubElement(inputs, "Input", idx=str(parent))
+                ET.SubElement(inputs, "MyInput", idx=str(parent)).tail = "\n"
             outpus = ET.SubElement(node, "Outputs")
+            outpus.tail = "\n"
+            outpus.text = "\n"
             for child, port in vert.output_dest_port.items():
-                ET.SubElement(outpus, "Output", idx=str(child), nextiter="0",type= port )
+                if port == "P":
+                    ET.SubElement(outpus, "MyOutput", idx=str(child), nextiter="0",NPB="0", type= port ).tail = "\n"
 
-            ET.SubElement(node, "RecParents").text=""
+                else:
+                    ET.SubElement(outpus, "MyOutput", idx=str(child), nextiter="0",type= port ).tail = "\n"
+
+            RecParents = ET.SubElement(node, "RecParents")
+            RecParents.text="\n"
+            RecParents.tail = "\n"
                 
 
 
-        indent(dfg)
+        # indent(dfg)
         tree = ET.ElementTree(dfg)
         # ET.indent(tree, '\n')
         result += (ET.tostring(dfg,  method="html")).decode('utf-8')
 
-
-
+        tree.write("filename.xml")
+        
         f = open("filename.xml", "w")
         f.write(result)
         f.close()
