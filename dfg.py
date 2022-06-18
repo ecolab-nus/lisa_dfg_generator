@@ -1,7 +1,10 @@
 
+from ast import While
 import sys
 
 import random
+import xml.etree.cElementTree as ET
+
 
 from numpy.lib.utils import safe_eval
 sys.path.append('graph_generation')
@@ -9,7 +12,64 @@ from graph_gen import *
 from random import seed
 from random import randint
 
+
 min_asap = 1
+min_alap = 1
+
+morpher_op_code = dict()
+morpher_op_code[0] = ["OLOAD","MOVC"]
+morpher_op_code[1] = ["LOADB","CMERGE", "CLT","OR","OSTORE","LS","LOAD"]
+morpher_op_code[2] = ["SELECT","ADD","MUL","STOREB"]
+morpher_op_code[3] = ["SELECT", "STORE"]
+
+
+morpher_nonstore_opcode = dict()
+morpher_nonstore_opcode[0] = ["OLOAD","MOVC"]
+morpher_nonstore_opcode[1] = ["LOADB","CMERGE", "CLT","OR","LS","LOAD"]
+morpher_nonstore_opcode[2] = ["SELECT","ADD","MUL"]
+morpher_nonstore_opcode[3] = ["SELECT"]
+
+morpher_store_opcode = dict()
+morpher_store_opcode[1] = ["OSTORE"]
+morpher_store_opcode[2] = ["STOREB"]
+morpher_store_opcode[3] = ["STORE"]
+
+
+
+# morpher_op_code["OLOAD"] = 0
+# morpher_op_code["MOVC"] = 0
+# morpher_op_code["LOADB"] = 1
+# morpher_op_code["CMERGE"] = 1
+# morpher_op_code["CLT"] = 1
+# morpher_op_code["OR"] = 1
+# morpher_op_code["OSTORE"] = 1
+# morpher_op_code["LS"] = 1
+# morpher_op_code["LOAD"] = 1
+# morpher_op_code["SELECT"] = 2
+# morpher_op_code["ADD"] = 2
+# morpher_op_code["MUL"] = 2
+# morpher_op_code["STOREB"] = 2
+# morpher_op_code["SELECT"] = 3
+
+
+
+
+def indent(elem, level=0):
+        i = "\n" + level*""
+        if len(elem):
+            if not elem.text or not elem.text.strip():
+                elem.text = i + ""
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+            for elem in elem:
+                indent(elem, level+1)
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+        else:
+            if level and (not elem.tail or not elem.tail.strip()):
+                elem.tail = i
+
+
 class Vertex:
     """Represent a vertex with a label and possible connected component."""
     # pylint: disable=too-few-public-methods
@@ -25,6 +85,7 @@ class Vertex:
         self.no_ancestor = 0
         self.no_descendant = 0
         self.is_mem = 0
+        self.output_dest_port = dict()
     
     def feature_str(self):
         # return (str(int(self.asap) * 2)+" "+str(self.in_degree) + "" +str(self.out_degree)+" "+str(self.no_grandparent) + "" +str(self.no_grandchild))
@@ -47,6 +108,7 @@ class DFGGraph:
         self.pred = {}
         self.succ = {}
         self.asap = {}
+        self.alap = {}
 
     def add_vertex(self, vertex):
         """Add a new vertex, optionally with edges to other vertices."""
@@ -727,52 +789,196 @@ class DFGGraph:
                          operand += 1
 
         return final_str
+    
+    
+     # below is for morpher  
+    def check_morpher_edge_limit(self):
+        # the number of input  node must be less or equal to 2
+        # print("satisfy_cgra_me_constraint")
+        # print("vertex:", self.vertices)
+        # print("edges:",self.edges)
+        # print("backtrack_edges:",self.backtrack_edges)
+        # print("pred", self.pred)
+        # print("succ", self.succ)
+
+        # check input node limiation
+        temp_pred = {}
+        for node_id in self.vertices.keys():
+            pred_limit = 3
+            if len(self.succ[node_id]) == 0:
+                pred_limit = randint(1,3)
+            if len(self.pred[node_id]) <= pred_limit:
+                curr_pred = self.pred[node_id]
+                curr_pred = list(curr_pred)
+                temp_pred[node_id] = curr_pred
+            else:
+                diff = len(self.pred[node_id]) - pred_limit
+                curr_pred = self.pred[node_id]
+                curr_pred = list(curr_pred)
+                sorted(curr_pred, key=lambda x: len(self.succ[x]))    
+                # print("befor", curr_pred)    
+                curr_pred = curr_pred[0:pred_limit]
+                # print("after", curr_pred)  
+                temp_pred[node_id] = curr_pred
+        # print("cgrame: temp_pred", temp_pred)
+        self.edges.clear()
+        self.pred.clear()
+        self.succ.clear()
+
+        for node in self.vertices.keys():
+            self.succ[node] = set()
+            self.pred[node] = set()
+
+        for node_id, preds in temp_pred.items():
+            for pred in preds:
+                self.edges.add((pred, node_id))
+                self.pred[node_id].add(pred)
+                self.succ[pred].add(node_id)
+        # print("cgrame: pred", self.pred)
+        # print("cgrame: succ", self.succ)
+      
+        return True
+    
+
+    def assign_morpher_op_code(self):
+
+        port_dest = ["I1", "I2", "P"]
+        for node, vert  in self.vertices.items():
+            opcode_candidates = []
+            if len(self.succ[node]) == 0:
+                #store op
+                opcode_candidates = morpher_store_opcode[len(self.pred[node])]
+            else:
+                opcode_candidates = morpher_nonstore_opcode[len(self.pred[node])]
+            
+            assert(len(opcode_candidates) > 0)
+            vert.opcode = random.choice(opcode_candidates)
+            print("assign ", node, "to ", vert.opcode )
+
+            index = 0
+            for parent in self.pred[node]:
+                self.vertices[parent].output_dest_port[node] = port_dest[index]
+                index += 1
+
+
+    def dump_morpher_str(self):
+        result = ""
+        MutexBB = ET.Element("MutexBB")
+        BB1 = ET.SubElement(MutexBB, "BB1", name = "random")
+        ET.SubElement(BB1, "BB2", name = "random2")
+        indent(MutexBB)
+        result += ET.tostring(MutexBB).decode('utf-8')
+
+
+        dfg = ET.Element("DFG", count = str(len(self.vertices)))
+        for index, vert in self.vertices.items():
+            print(index)
+            node = ET.SubElement(dfg, "Node", idx=str(index), ASAP = str(self.asap[index]), ALAP = "0", CONST="0", BB="random")
+            ET.SubElement(node, "OP").text = vert.opcode
+            ET.SubElement(node, "BasePointerName", size="1").text="random"
+
+            inputs = ET.SubElement(node, "Inputs")
+            for parent in self.pred[index]:
+                ET.SubElement(inputs, "Input", idx=str(parent))
+            outpus = ET.SubElement(node, "Outputs")
+            for child, port in vert.output_dest_port.items():
+                ET.SubElement(outpus, "Output", idx=str(child), nextiter="0",type= port )
+
+            ET.SubElement(node, "RecParents").text=""
+                
+
+
+        indent(dfg)
+        tree = ET.ElementTree(dfg)
+        # ET.indent(tree, '\n')
+        result += (ET.tostring(dfg,  method="html")).decode('utf-8')
+
+
+
+        f = open("filename.xml", "w")
+        f.write(result)
+        f.close()
+
+        
 
 
 
 
 if __name__ == "__main__":
-    MIN_NODE = 5
-    MAX_NODE = 10
+    MIN_NODE = 20
+    MAX_NODE = 30
+
+    min_asap = 0
 
     number_node = random.choice(range(MIN_NODE, MAX_NODE))
     min_edge = 2 # for each node
     max_edge = random.choice(range(3, 5)) # for each node
-    edge_dic = dfg_json_maker(str(1), 0, 0, number_node, min_edge, max_edge, 0, 1, 2, 1)
+   
 
-    graph = Graph()
-    for num in range(number_node):
-        graph.add_vertex(Vertex(id=str(num+1)))
+    while (True):
+        edge_dic = dfg_json_maker(str(1), 0, 0, number_node, min_edge, max_edge, 0, 1, 2, 1)
+        graph = DFGGraph("test")
+        for num in range(number_node):
+            graph.add_vertex(Vertex(id=str(num+1)))
 
-    for key,values in edge_dic.items():
-        for value in values:
-            graph.add_edge(key, value)
+        for key,values in edge_dic.items():
+            for value in values:
+                graph.add_edge(key, value)
 
-    node_number = len(graph.vertices.keys())
-    graph.check_connectivity()
-    graph.handle_cycle()
-    if not graph.check_connectivity():
-        print("check connectivity false")
-        assert False
+        node_number = len(graph.vertices.keys())
+        graph.check_connectivity()
+        graph.handle_cycle()
+        if len(graph.vertices) == 0:
+            continue
+        
+        if not graph.check_morpher_edge_limit():
+            # print("did not generate", i)
+            continue
+        if not graph.check_connectivity():
+            continue
 
-    new_node_number = len(graph.vertices.keys())
-    if node_number != new_node_number:
-        #add somework to handle it
+        
+            
+
+        new_node_number = len(graph.vertices.keys())
+        #if node_number != new_node_number:
+            #add somework to handle it
         graph.make_node_index_continous(node_number)
-    
-    asap_value = graph.ASAP()
-    labels = graph.generate_simple_labels(asap_value, 2)
+        # try:
+        #     signal.signal(signal.SIGALRM, myHandler)
+        #     signal.alarm(10)
+        #
+        #     asap_value = graph.ASAP()
+        #
+        #     signal.alarm(0)
+        # except Exception as ret:
+        #     print("msg:", ret)
+        #     graph.ASAP()
+        #     with open(os.path.join(dir, "graph", "error.txt"), "w") as f:
+        #         for edge in graph.edges:
+        #             start_node, end_node = edge
+        #             f.write(str(start_node - 1) + '\t' + str(end_node - 1) + '\n')
+        asap_value = graph.set_ASAP()
+        graph.set_node_feature()
+        graph.get_same_level_node()
 
-    in_degree = graph.get_in_degree()
-    out_degree = graph.get_out_degree()
-    if len(graph.vertices) == 0:
-        assert False
+        graph.assign_morpher_op_code()
 
-    print("edge", graph.edges)
-    print("asap_value", asap_value)
-    print("labels", labels)
-    print("in_degree", in_degree)
-    print("out_degree", out_degree)
+        if len(graph.vertices) == 0:
+           continue
+
+        # in_degree = graph.get
+        # out_degree = graph.get_out_degree()
+        graph.dump_morpher_str()
+        
+
+        print("edge", graph.edges)
+        print("asap_value", asap_value)
+
+        sys.exit()
+    # print("labels", labels)
+    # print("in_degree", in_degree)
+    # print("out_degree", out_degree)
 
 
 
