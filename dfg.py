@@ -820,9 +820,9 @@ class DFGGraph:
                 curr_pred = self.pred[node_id]
                 curr_pred = list(curr_pred)
                 sorted(curr_pred, key=lambda x: len(self.succ[x]))    
-                print("befor", curr_pred)    
+                # print("befor", curr_pred)    
                 curr_pred = curr_pred[0:pred_limit]
-                print("after", curr_pred)  
+                # print("after", curr_pred)  
                 temp_pred[node_id] = curr_pred
         # print("cgrame: temp_pred", temp_pred)
         self.edges.clear()
@@ -860,8 +860,8 @@ class DFGGraph:
             opcode_candidates = []
             if len(self.succ[node]) == 0:
                 #store op
-                print("succ", len(self.succ[node]))
-                print("pred",len(self.pred[node]))
+                # print("succ", len(self.succ[node]))
+                # print("pred",len(self.pred[node]))
                 opcode_candidates = morpher_store_opcode[len(self.pred[node])]
             else:
                 opcode_candidates = morpher_nonstore_opcode[len(self.pred[node])]

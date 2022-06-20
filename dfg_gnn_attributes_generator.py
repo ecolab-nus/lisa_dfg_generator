@@ -64,6 +64,8 @@ def transform_graph_by_dir(home, src, dest):
     data_path = os.path.join(path.parent, home)
     graph_path = os.path.join(data_path, src)
     new_graph_path = os.path.join(data_path, dest)
+    if not os.path.exists(new_graph_path):
+        os.makedirs(new_graph_path)
     graph_files = os.listdir(graph_path)
     num = 0
     for file in graph_files:
@@ -79,7 +81,7 @@ def transform_graph_by_dir(home, src, dest):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Process dfg_transformer parameter.')
-    parser.add_argument( "--home_directory", default="cgra_me",  help="the home directory of graph files")
+    parser.add_argument( "--home_directory", default="morpher",  help="the home directory of graph files")
     parser.add_argument("-s", "--source_directory", default="graph",  help="the source directory of graph")
     parser.add_argument("-d", "--destination_directory", default="transformered_graph",  help="the desination of transformed graphes")
 
@@ -89,5 +91,5 @@ if __name__ == "__main__":
     print("destination directory ", args.destination_directory)
 
 
-    transform_graph_by_dir(home = args.home_directory, src = args.source_directory, dest =  args.destination_directory )
+    transform_graph_by_dir(home = "data/"+ args.home_directory, src = args.source_directory, dest =  args.destination_directory )
 
