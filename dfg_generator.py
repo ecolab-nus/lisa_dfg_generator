@@ -2,7 +2,6 @@
 import sys
 import random
 import os
-sys.path.append('graph_generation')
 from random import seed
 from random import randint
 from graph_gen import *
@@ -10,6 +9,9 @@ from dfg import DFGGraph, Vertex
 from tqdm import tqdm
 import signal
 import argparse
+
+enable_cgra_me = False
+enable_morpher = True
 
 def myHandler(signum, frame):
     raise Exception("TimeoutError")
@@ -20,8 +22,16 @@ def dump_cgra_me_graph(dir, graph: DFGGraph) :
 
     with open(os.path.join(dir, "cgra_me", graph_name+".dot"), "w") as f:
         f.write("digraph G { \n")
-        f.write(graph.dump_cgra_me_str())
+        f.write(graph.cgrame_toStr())
         f.write("}\n")
+    
+    return True
+
+def dump_morpher_graph(dir, graph: DFGGraph) :
+    graph_name = graph.name
+
+    with open(os.path.join(dir, "morpher", graph_name+".xml"), "w") as f:
+        f.write(graph.morpher_toStr())
     
     return True
     
@@ -52,10 +62,18 @@ def single_dfg_gen(dir, i):
     graph.handle_cycle()
     if len(graph.vertices) == 0:
         return False
-    
-    if not graph.satisfy_cgra_me_constraint():
-        # print("did not generate", i)
-        return False
+    if enable_cgra_me:
+        if not graph.satisfy_cgra_me_constraint():
+            # print("did not generate", i)
+            return False
+    elif enable_morpher:
+        if not graph.check_morpher_edge_limit():
+            # print("did not generate", i)
+            return False
+        graph.assign_morpher_op_code()
+    else:
+        assert(False)
+
     if not graph.check_connectivity():
         # 
         return False
@@ -91,8 +109,10 @@ def single_dfg_gen(dir, i):
             start_node, end_node = edge
             f.write(str(start_node)+'\t'+str(end_node)+'\n')
 
-
-    dump_cgra_me_graph(dir, graph)
+    if enable_cgra_me:
+        dump_cgra_me_graph(dir, graph)
+    elif enable_morpher:
+        dump_morpher_graph(dir, graph)
 
     # save tag info
     with open(os.path.join(dir, "graph", str(i)+"_feature.txt"), "w") as f:
@@ -130,8 +150,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Process dfg_generator parameter.')
     parser.add_argument("-s", "--start_index", default=0, type=int, help="the start index of graph")
-    parser.add_argument("-n", "--graph_num",default=10, type=int, help="the number of generated graphes")
-    parser.add_argument("-d", "--directory",default="cgra_me", help="the number of generated graphes")
+    parser.add_argument("-n", "--graph_num",default=100, type=int, help="the number of generated graphes")
+    parser.add_argument("-d", "--directory",default="morpher", help="the directory of generated graphes")
 
 
     args = parser.parse_args()

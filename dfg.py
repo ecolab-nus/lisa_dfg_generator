@@ -7,7 +7,6 @@ import xml.etree.cElementTree as ET
 
 
 from numpy.lib.utils import safe_eval
-sys.path.append('graph_generation')
 from graph_gen import *
 from random import seed
 from random import randint
@@ -755,7 +754,7 @@ class DFGGraph:
         return True
             
 
-    def dump_cgra_me_str(self):
+    def cgrame_toStr(self):
         start_node = "const"
         two_op_general_op = ["add", "sub", "mul"]
         one_op_general_op = ["load"]
@@ -821,14 +820,16 @@ class DFGGraph:
                 curr_pred = self.pred[node_id]
                 curr_pred = list(curr_pred)
                 sorted(curr_pred, key=lambda x: len(self.succ[x]))    
-                # print("befor", curr_pred)    
+                print("befor", curr_pred)    
                 curr_pred = curr_pred[0:pred_limit]
-                # print("after", curr_pred)  
+                print("after", curr_pred)  
                 temp_pred[node_id] = curr_pred
         # print("cgrame: temp_pred", temp_pred)
         self.edges.clear()
         self.pred.clear()
         self.succ.clear()
+
+        
 
         for node in self.vertices.keys():
             self.succ[node] = set()
@@ -841,6 +842,13 @@ class DFGGraph:
                 self.succ[pred].add(node_id)
         # print("cgrame: pred", self.pred)
         # print("cgrame: succ", self.succ)
+
+        for k in list(self.vertices.keys()):
+            if len(self.succ[k]) == 0 and  len(self.pred[k]) == 0:
+                del self.vertices[k]
+                del self.pred[k]
+                del self.succ[k]
+
       
         return True
     
@@ -852,13 +860,15 @@ class DFGGraph:
             opcode_candidates = []
             if len(self.succ[node]) == 0:
                 #store op
+                print("succ", len(self.succ[node]))
+                print("pred",len(self.pred[node]))
                 opcode_candidates = morpher_store_opcode[len(self.pred[node])]
             else:
                 opcode_candidates = morpher_nonstore_opcode[len(self.pred[node])]
             
             assert(len(opcode_candidates) > 0)
             vert.opcode = random.choice(opcode_candidates)
-            print("assign ", node, "to ", vert.opcode )
+            # print("assign ", node, "to ", vert.opcode )
 
             index = 0
             for parent in self.pred[node]:
@@ -866,7 +876,7 @@ class DFGGraph:
                 index += 1
 
 
-    def dump_morpher_str(self):
+    def morpher_toStr(self):
         result = ""
         MutexBB = ET.Element("MutexBB")
         BB1 = ET.SubElement(MutexBB, "BB1", name = "random")
@@ -879,7 +889,7 @@ class DFGGraph:
         dfg.tail = "\n"
         dfg.text = "\n"
         for index, vert in self.vertices.items():
-            print(index)
+            # print(index)
             node = ET.SubElement(dfg, "Node", idx=str(index), ASAP = str(self.asap[index]), ALAP = "0", CONST="0", BB="random")
             # node = ET.Element( "Node", idx=str(index), ASAP = str(self.asap[index]), ALAP = "0", CONST="0", BB="random")
             node.tail = "\n\n"
@@ -920,14 +930,7 @@ class DFGGraph:
         # ET.indent(tree, '\n')
         result += (ET.tostring(dfg,  method="html")).decode('utf-8')
 
-        tree.write("filename.xml")
-        
-        f = open("filename.xml", "w")
-        f.write(result)
-        f.close()
-
-        
-
+        return result
 
 
 
@@ -996,11 +999,16 @@ if __name__ == "__main__":
 
         # in_degree = graph.get
         # out_degree = graph.get_out_degree()
-        graph.dump_morpher_str()
+        result = graph.morpher_toStr()
+
+        f = open("filename.xml", "w")
+        f.write(result)
+        f.close()
+
         
 
-        print("edge", graph.edges)
-        print("asap_value", asap_value)
+        # print("edge", graph.edges)
+        # print("asap_value", asap_value)
 
         sys.exit()
     # print("labels", labels)

@@ -2,8 +2,8 @@
 """Pyrgg graph generators module."""
 import random
 import datetime
-from params import *
-from functions import *
+from graph_gen_params import *
+from graph_gen_functions import *
 
 # random_system=random.SystemRandom()
 random_system = random

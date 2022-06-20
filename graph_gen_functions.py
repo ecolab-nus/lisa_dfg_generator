@@ -8,7 +8,7 @@ import random
 import textwrap
 import yaml
 
-from params import (
+from graph_gen_params import (
     MENU_ITEMS1,
     MENU_ITEMS2,
     PYRGG_LINKS,
