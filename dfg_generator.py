@@ -5,6 +5,7 @@ import os
 from random import seed
 from random import randint
 from graph_gen import *
+from dfg_gnn_attributes_generator import *
 from dfg import DFGGraph, Vertex
 from tqdm import tqdm
 import signal
@@ -40,8 +41,8 @@ def single_dfg_gen(dir, i):
     """
     i: the id of graph
     """
-    MIN_NODE = 25
-    MAX_NODE = 45
+    MIN_NODE = 40
+    MAX_NODE = 100
 
     number_node = random.choice(range(MIN_NODE, MAX_NODE))
     # print("i", "number of node", number_node)
@@ -163,3 +164,7 @@ if __name__ == "__main__":
     # assert(False)
 
     generator(args.graph_num, "../data/"+args.directory, model = args.directory, satrt_index = args.start_index)
+
+    transform_graph_by_dir("data/" + str(args.directory), "graph", "transformered_graph")
+
+    
