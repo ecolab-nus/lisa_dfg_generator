@@ -71,7 +71,6 @@ def single_dfg_gen(dir, i):
         if not graph.check_morpher_edge_limit():
             # print("did not generate", i)
             return False
-        graph.assign_morpher_op_code()
     else:
         assert(False)
 
@@ -82,6 +81,10 @@ def single_dfg_gen(dir, i):
     #if node_number != new_node_number:
         #add somework to handle it
     graph.make_node_index_continous(node_number)
+
+    if enable_morpher:
+        graph.assign_morpher_op_code()
+
     # try:
     #     signal.signal(signal.SIGALRM, myHandler)
     #     signal.alarm(10)
