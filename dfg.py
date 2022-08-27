@@ -3,9 +3,10 @@ from ast import While
 import sys
 
 import random
+from turtle import back
 import xml.etree.cElementTree as ET
 
-
+from math import ceil
 from numpy.lib.utils import safe_eval
 from graph_gen import *
 from random import seed
@@ -108,7 +109,7 @@ class DFGGraph:
         self.vertices = {}
         self.num_vertices = 0
         self.edges = set()
-        self.backtrack_edges = set()
+        self.backedges = set()
         self.pred = {}
         self.succ = {}
         self.asap = {}
@@ -214,14 +215,14 @@ class DFGGraph:
             self.pred[new_des].add(new_src)
             self.succ[new_src].add(new_des)
 
-        temp_back_edges = self.backtrack_edges.copy()
-        self.backtrack_edges.clear()
+        temp_back_edges = self.backedges.copy()
+        self.backedges.clear()
         for src, des in temp_back_edges:
             if (src not in old_to_new.keys() ) or ( des not in  old_to_new.keys()):
                 continue
             new_src = old_to_new[src]
             new_des = old_to_new[des]
-            self.backtrack_edges.add((new_src, new_des))
+            self.backedges.add((new_src, new_des))
 
         # print("vertex:", self.vertices)
         # print("edges:",self.edges)
@@ -233,7 +234,7 @@ class DFGGraph:
 
     def handle_cycle(self):
 
-        self.backtrack_edges.clear()
+        self.backedges.clear()
 
         while True:
             cycle_edges = set()
@@ -261,9 +262,9 @@ class DFGGraph:
                     self.succ[node] = set()
                     self.pred[node] = set()
 
-            num_old_back_edge = len(self.backtrack_edges)
+            num_old_back_edge = len(self.backedges)
             for edge in cycle_edges:
-                self.backtrack_edges.add((edge[0],edge[1]))
+                self.backedges.add((edge[0],edge[1]))
             temp_edges= self.edges.copy()
             self.edges.clear()
 
@@ -913,11 +914,14 @@ class DFGGraph:
             outpus.tail = "\n"
             outpus.text = "\n"
             for child, port in vert.output_dest_port.items():
+                next_iter_value = "0"
+                if self.asap[index] > self.asap[int(child)]:
+                    next_iter_value = "1"
                 if port == "P":
-                    ET.SubElement(outpus, "MyOutput", idx=str(child), nextiter="0",NPB="0", type= port ).tail = "\n"
+                    ET.SubElement(outpus, "MyOutput", idx=str(child), nextiter=next_iter_value,NPB="0", type= port ).tail = "\n"
 
                 else:
-                    ET.SubElement(outpus, "MyOutput", idx=str(child), nextiter="0",type= port ).tail = "\n"
+                    ET.SubElement(outpus, "MyOutput", idx=str(child), nextiter=next_iter_value,type= port ).tail = "\n"
 
             RecParents = ET.SubElement(node, "RecParents")
             RecParents.text="\n"
@@ -932,7 +936,38 @@ class DFGGraph:
 
         return result
 
+    def add_backedges(self):
+        # actually, before this function, this one has a few backedges see in handle_cycle function.
+        total_edge_num = len(self.edges)
+        back_edge_candidates = []
+        vertice_num = len(self.vertices)
+        added_child_nodes = set()
+        for i in range(vertice_num):
+            for j in range(i+1, vertice_num):
+                if self.asap[i] > self.asap[j] and len(self.pred[j]) < 3 and j not in added_child_nodes:
+                    added_child_nodes.add(j)
+                    back_edge_candidates.append((i, j))
+                    break
+        be_candidate_num =  len(back_edge_candidates)
+        be_edge_num = ceil(total_edge_num /10)
+        print("candidates num:", be_candidate_num)
+        print("edge num:", total_edge_num)
+        print("be edge num:", be_edge_num)
+        print("size", randomlist)
+        print("known_backedges, ", len(self.backedges))
+        if len(self.backedges)> 0:
+            return
+        randomlist = random.sample(range(0, be_candidate_num-1), be_edge_num)
+        
+        for i in range(be_edge_num):
+            print(i)
+            src, des = back_edge_candidates[randomlist[i]]
+            self.backedges.add((src,des))
+            self.pred[des].add(src)
+            assert(len(self.pred[des]) <= 3)
+            self.succ[src].add(des)
 
+        assert(be_edge_num == len(self.backedges))
 
 if __name__ == "__main__":
     MIN_NODE = 20
@@ -992,6 +1027,7 @@ if __name__ == "__main__":
         graph.set_node_feature()
         graph.get_same_level_node()
 
+        graph.add_backedges()
         graph.assign_morpher_op_code()
 
         if len(graph.vertices) == 0:
@@ -999,6 +1035,7 @@ if __name__ == "__main__":
 
         # in_degree = graph.get
         # out_degree = graph.get_out_degree()
+
         result = graph.morpher_toStr()
 
         f = open("filename.xml", "w")
@@ -1006,8 +1043,9 @@ if __name__ == "__main__":
         f.close()
 
         
-
-        # print("edge", graph.edges)
+        print("asap", graph.asap)
+        print("edge", graph.edges)
+        print("backedges", graph.backedges)
         # print("asap_value", asap_value)
 
         sys.exit()
