@@ -950,17 +950,16 @@ class DFGGraph:
                     break
         be_candidate_num =  len(back_edge_candidates)
         be_edge_num = ceil(total_edge_num /10)
-        print("candidates num:", be_candidate_num)
-        print("edge num:", total_edge_num)
-        print("be edge num:", be_edge_num)
-        print("size", randomlist)
-        print("known_backedges, ", len(self.backedges))
+        # print("candidates num:", be_candidate_num)
+        # print("edge num:", total_edge_num)
+        # print("be edge num:", be_edge_num)
+        # print("size", randomlist)
+        # print("known_backedges, ", len(self.backedges))
         if len(self.backedges)> 0:
             return
         randomlist = random.sample(range(0, be_candidate_num-1), be_edge_num)
         
         for i in range(be_edge_num):
-            print(i)
             src, des = back_edge_candidates[randomlist[i]]
             self.backedges.add((src,des))
             self.pred[des].add(src)
